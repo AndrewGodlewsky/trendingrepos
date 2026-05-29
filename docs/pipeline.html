@@ -1,0 +1,1288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pipeline Reference — GitHub Trending</title>
+  <style>
+:root {
+  --bg:         #0d1117;
+  --surface:    #161b22;
+  --surface-2:  #1c2230;
+  --border:     #30363d;
+  --text:       #c9d1d9;
+  --text-muted: #8b949e;
+  --accent:     #58a6ff;
+  --accent-dim: #1f6feb22;
+  --green:      #3fb950;
+  --yellow:     #d29922;
+  --red:        #f85149;
+  --purple:     #bc8cff;
+  --orange:     #ffa657;
+  --radius:     8px;
+  --radius-sm:  4px;
+  --mono:       'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+  --sidebar-w:  260px;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+  font-size: 15px;
+  line-height: 1.65;
+  display: flex;
+  min-height: 100vh;
+}
+a { color: var(--accent); text-decoration: none; }
+a:hover { text-decoration: underline; }
+code {
+  font-family: var(--mono);
+  font-size: 0.82em;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  padding: 0.1em 0.4em;
+  color: var(--accent);
+}
+pre {
+  font-family: var(--mono);
+  font-size: 0.82rem;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 1rem 1.25rem;
+  overflow-x: auto;
+  line-height: 1.55;
+  color: var(--text);
+  margin: 0.75rem 0;
+}
+pre code { background: none; border: none; padding: 0; font-size: inherit; color: inherit; }
+h1 { font-size: 1.7rem; font-weight: 700; line-height: 1.25; color: var(--text); }
+h2 { font-size: 1.2rem; font-weight: 700; color: var(--text); padding-bottom: 0.6rem; border-bottom: 1px solid var(--border); margin-bottom: 1.1rem; margin-top: 2.2rem; }
+h2:first-of-type { margin-top: 0; }
+h3 { font-size: 1rem; font-weight: 700; color: var(--accent); margin: 1.4rem 0 0.5rem; }
+h4 { font-size: 0.9rem; font-weight: 600; color: var(--text); margin: 1rem 0 0.4rem; }
+p { color: var(--text-muted); margin-bottom: 0.75rem; font-size: 0.9rem; }
+p:last-child { margin-bottom: 0; }
+ul, ol { color: var(--text-muted); padding-left: 1.4rem; font-size: 0.9rem; margin-bottom: 0.75rem; }
+li { margin-bottom: 0.25rem; line-height: 1.55; }
+strong { color: var(--text); font-weight: 600; }
+
+/* ===== Sidebar ===== */
+.sidebar {
+  width: var(--sidebar-w);
+  flex-shrink: 0;
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 100vh;
+  overflow-y: auto;
+  padding: 1.25rem 0;
+  z-index: 100;
+}
+.sidebar-logo {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0 1.1rem 1rem;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 0.75rem;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--text);
+}
+.sidebar-logo a { color: var(--text); }
+.nav-group { margin-bottom: 0.5rem; }
+.nav-group-label {
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--text-muted);
+  padding: 0.3rem 1.1rem;
+}
+.nav-link {
+  display: block;
+  padding: 0.3rem 1.1rem 0.3rem 1.4rem;
+  font-size: 0.83rem;
+  color: var(--text-muted);
+  transition: color 0.15s, background 0.15s;
+  border-left: 2px solid transparent;
+}
+.nav-link:hover { color: var(--accent); background: var(--accent-dim); text-decoration: none; }
+.nav-link.active { color: var(--accent); border-left-color: var(--accent); background: var(--accent-dim); }
+
+/* ===== Main content ===== */
+.main {
+  margin-left: var(--sidebar-w);
+  flex: 1;
+  padding: 2.5rem 2.5rem 4rem;
+  max-width: 1000px;
+}
+.page-header {
+  margin-bottom: 2.5rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid var(--border);
+}
+.page-header .subtitle {
+  font-size: 0.95rem;
+  color: var(--text-muted);
+  margin-top: 0.5rem;
+}
+
+/* ===== Sections ===== */
+.section { margin-bottom: 3rem; }
+
+/* ===== Tables ===== */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+  margin: 0.75rem 0;
+}
+th {
+  text-align: left;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+  padding: 0.5rem 0.75rem;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface-2);
+}
+td {
+  padding: 0.55rem 0.75rem;
+  border-bottom: 1px solid var(--border);
+  color: var(--text-muted);
+  vertical-align: top;
+  line-height: 1.5;
+}
+tr:last-child td { border-bottom: none; }
+tr:hover td { background: rgba(255,255,255,0.02); }
+.td-name { color: var(--text); font-weight: 600; font-family: var(--mono); font-size: 0.8rem; white-space: nowrap; }
+.td-type { color: var(--purple); font-family: var(--mono); font-size: 0.78rem; white-space: nowrap; }
+.td-required { color: var(--red); font-size: 0.75rem; font-weight: 700; white-space: nowrap; }
+.td-optional { color: var(--text-muted); font-size: 0.75rem; white-space: nowrap; }
+.td-default { color: var(--yellow); font-family: var(--mono); font-size: 0.78rem; }
+.td-file { color: var(--green); font-family: var(--mono); font-size: 0.78rem; white-space: nowrap; }
+.td-accent { color: var(--accent); font-weight: 600; }
+
+/* ===== Cards ===== */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1.25rem 1.4rem;
+  margin-bottom: 1rem;
+}
+.card-title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 0.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.badge {
+  display: inline-block;
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 0.1rem 0.45rem;
+  border-radius: 3px;
+}
+.badge-green  { background: rgba(63,185,80,0.15);  color: var(--green); }
+.badge-blue   { background: var(--accent-dim);     color: var(--accent); }
+.badge-yellow { background: rgba(210,153,34,0.15); color: var(--yellow); }
+.badge-red    { background: rgba(248,81,73,0.15);  color: var(--red); }
+.badge-purple { background: rgba(188,140,255,0.15);color: var(--purple); }
+
+/* ===== Flow diagram ===== */
+.flow {
+  display: flex;
+  align-items: stretch;
+  gap: 0;
+  margin: 1.25rem 0;
+  flex-wrap: wrap;
+  row-gap: 0.5rem;
+}
+.flow-step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.flow-box {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 0.55rem 0.9rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text);
+  text-align: center;
+  white-space: nowrap;
+  min-width: 90px;
+}
+.flow-box.accent { border-color: var(--accent); background: var(--accent-dim); color: var(--accent); }
+.flow-box.green  { border-color: var(--green);  background: rgba(63,185,80,0.1);  color: var(--green); }
+.flow-box.yellow { border-color: var(--yellow); background: rgba(210,153,34,0.1); color: var(--yellow); }
+.flow-box.purple { border-color: var(--purple); background: rgba(188,140,255,0.1);color: var(--purple); }
+.flow-arrow {
+  display: flex;
+  align-items: center;
+  color: var(--text-muted);
+  font-size: 1.1rem;
+  padding: 0 0.4rem;
+  flex-shrink: 0;
+}
+.flow-sub {
+  font-size: 0.68rem;
+  color: var(--text-muted);
+  margin-top: 0.25rem;
+  text-align: center;
+}
+
+/* ===== Two-column layout ===== */
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+@media (max-width: 700px) { .two-col { grid-template-columns: 1fr; } }
+
+/* ===== Callout ===== */
+.callout {
+  border-left: 3px solid var(--accent);
+  background: var(--accent-dim);
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  padding: 0.75rem 1rem;
+  margin: 0.75rem 0;
+  font-size: 0.875rem;
+  color: var(--text-muted);
+}
+.callout.yellow { border-left-color: var(--yellow); background: rgba(210,153,34,0.08); }
+.callout.red    { border-left-color: var(--red);    background: rgba(248,81,73,0.08); }
+.callout.green  { border-left-color: var(--green);  background: rgba(63,185,80,0.08); }
+.callout strong { color: var(--text); }
+
+/* ===== Scrollbar ===== */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+  </style>
+</head>
+<body>
+
+<!-- ===== Sidebar ===== -->
+<nav class="sidebar" id="sidebar">
+  <div class="sidebar-logo">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M12 0C5.374 0 0 5.373 0 12c0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23A11.509 11.509 0 0 1 12 5.803c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576C20.566 21.797 24 17.3 24 12c0-6.627-5.373-12-12-12z"/></svg>
+    <a href="index.html">Pipeline Reference</a>
+  </div>
+
+  <div class="nav-group">
+    <div class="nav-group-label">Overview</div>
+    <a href="#overview" class="nav-link">Architecture</a>
+    <a href="#file-map" class="nav-link">File Map</a>
+    <a href="#data-flow" class="nav-link">End-to-End Data Flow</a>
+  </div>
+  <div class="nav-group">
+    <div class="nav-group-label">Configuration</div>
+    <a href="#env-vars" class="nav-link">Environment Variables</a>
+    <a href="#scheduler" class="nav-link">Task Scheduler</a>
+  </div>
+  <div class="nav-group">
+    <div class="nav-group-label">Pipeline Modules</div>
+    <a href="#github-api" class="nav-link">GitHub API (github_client)</a>
+    <a href="#fetcher" class="nav-link">Fetcher</a>
+    <a href="#ranker" class="nav-link">Ranker &amp; Scoring</a>
+    <a href="#summarizer" class="nav-link">AI Summarizer</a>
+    <a href="#site-generator" class="nav-link">Site Generator</a>
+  </div>
+  <div class="nav-group">
+    <div class="nav-group-label">Data Layer</div>
+    <a href="#storage" class="nav-link">Storage Module</a>
+    <a href="#db-schema" class="nav-link">Database Schema</a>
+    <a href="#historical" class="nav-link">Historical Import</a>
+  </div>
+  <div class="nav-group">
+    <div class="nav-group-label">Frontend</div>
+    <a href="#filter-logic" class="nav-link">Filter Logic &amp; Thresholds</a>
+    <a href="#card-data" class="nav-link">Card Data Attributes</a>
+    <a href="#sort-logic" class="nav-link">Sort Logic</a>
+  </div>
+  <div class="nav-group">
+    <div class="nav-group-label">Deployment</div>
+    <a href="#git-github" class="nav-link">Git &amp; GitHub</a>
+    <a href="#cloudflare" class="nav-link">Cloudflare Pages</a>
+    <a href="#what-is-public" class="nav-link">What Gets Published</a>
+  </div>
+</nav>
+
+<!-- ===== Main ===== -->
+<main class="main">
+
+  <div class="page-header">
+    <h1>Pipeline Reference</h1>
+    <p class="subtitle">Complete technical documentation for the GitHub Trending Repos pipeline — every module, every file, every decision point.</p>
+    <p style="margin-top:0.4rem;font-size:0.82rem;color:var(--text-muted);">
+      Project root: <code>A:\Claude\workflow test\</code> &nbsp;|&nbsp;
+      <a href="index.html">← Back to trending</a> &nbsp;|&nbsp;
+      <a href="about.html">About</a>
+    </p>
+  </div>
+
+  <!-- ====================== OVERVIEW ====================== -->
+  <section class="section" id="overview">
+    <h2>Architecture</h2>
+    <p>The pipeline is a <strong>daily Python script</strong> that runs locally on Windows, stores everything in a SQLite database, and publishes a <strong>pre-rendered static HTML site</strong> to Cloudflare Pages via GitHub. No server is required to view the site.</p>
+
+    <div class="flow" style="margin:1.5rem 0;">
+      <div class="flow-step">
+        <div class="flow-box accent">GitHub API</div>
+        <div class="flow-sub">Search endpoint</div>
+      </div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step">
+        <div class="flow-box">Fetch + Rank</div>
+        <div class="flow-sub">fetcher + ranker</div>
+      </div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step">
+        <div class="flow-box yellow">SQLite DB</div>
+        <div class="flow-sub">trending.db</div>
+      </div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step">
+        <div class="flow-box purple">Claude API</div>
+        <div class="flow-sub">Haiku / Sonnet</div>
+      </div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step">
+        <div class="flow-box yellow">SQLite DB</div>
+        <div class="flow-sub">summaries table</div>
+      </div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step">
+        <div class="flow-box">Site Generator</div>
+        <div class="flow-sub">site_generator.py</div>
+      </div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step">
+        <div class="flow-box green">docs/index.html</div>
+        <div class="flow-sub">static site</div>
+      </div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step">
+        <div class="flow-box accent">Cloudflare</div>
+        <div class="flow-sub">via GitHub push</div>
+      </div>
+    </div>
+
+    <div class="two-col">
+      <div class="card">
+        <div class="card-title">What runs where</div>
+        <ul>
+          <li><strong>Pipeline</strong> — runs locally on your Windows machine via Task Scheduler at 8:00 AM daily</li>
+          <li><strong>Database</strong> — <code>data/trending.db</code> lives on your machine only, never pushed to GitHub</li>
+          <li><strong>Website</strong> — <code>docs/index.html</code> is pushed to GitHub; Cloudflare Pages serves it</li>
+          <li><strong>Secrets</strong> — <code>.env</code> file, never committed</li>
+        </ul>
+      </div>
+      <div class="card">
+        <div class="card-title">Key numbers</div>
+        <ul>
+          <li><strong>200</strong> repos fetched and ranked per daily run</li>
+          <li><strong>116k+</strong> repos matching the search query on a typical day</li>
+          <li><strong>1,532,995</strong> rows in the DB (16 days of history seeded)</li>
+          <li><strong>~66 seconds</strong> average pipeline runtime (warm cache)</li>
+          <li><strong>~23 minutes</strong> first run (all 200 repos need Claude summaries)</li>
+          <li><strong>~$0.002</strong> Claude Haiku cost per new repo summary</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ====================== FILE MAP ====================== -->
+  <section class="section" id="file-map">
+    <h2>File Map</h2>
+    <p>Every file in the project, what it does, and what it reads/writes.</p>
+
+    <h3>Python modules (execution order)</h3>
+    <table>
+      <thead><tr><th>File</th><th>Role</th><th>Reads</th><th>Writes</th></tr></thead>
+      <tbody>
+        <tr>
+          <td class="td-file">run_pipeline.py</td>
+          <td>Main entry point. Chains all steps, handles <code>--skip-*</code> flags, logs timing.</td>
+          <td>config, args</td>
+          <td><code>logs/run_YYYY-MM-DD.log</code></td>
+        </tr>
+        <tr>
+          <td class="td-file">config.py</td>
+          <td>Loads <code>.env</code>, validates required keys, applies defaults, returns a plain dict.</td>
+          <td><code>.env</code></td>
+          <td>—</td>
+        </tr>
+        <tr>
+          <td class="td-file">github_client.py</td>
+          <td>GitHub Search API client. Paginates results, enforces rate-limit delays, handles auth errors.</td>
+          <td>GitHub API (HTTPS)</td>
+          <td>—</td>
+        </tr>
+        <tr>
+          <td class="td-file">models.py</td>
+          <td>Dataclasses: <code>RawRepo</code> (API fields) and <code>RankedRepo</code> (+ score, rank, stars_7d).</td>
+          <td>—</td>
+          <td>—</td>
+        </tr>
+        <tr>
+          <td class="td-file">ranker.py</td>
+          <td>Computes composite trending score and assigns ranks. Pure function — no I/O.</td>
+          <td>list of RawRepo</td>
+          <td>list of RankedRepo</td>
+        </tr>
+        <tr>
+          <td class="td-file">fetcher.py</td>
+          <td>Orchestrates: call github_client → build RawRepo objects → call ranker → compute star deltas → save to DB.</td>
+          <td>GitHub API, DB (previous snapshot)</td>
+          <td>DB <code>daily_snapshots</code></td>
+        </tr>
+        <tr>
+          <td class="td-file">storage.py</td>
+          <td>All SQLite I/O. Opens/initialises DB, save/load repos, save/load summaries, get_history().</td>
+          <td><code>data/trending.db</code></td>
+          <td><code>data/trending.db</code></td>
+        </tr>
+        <tr>
+          <td class="td-file">summarizer.py</td>
+          <td>Fetches repo context (README, file tree, configs) from GitHub API, sends to Claude, parses JSON response, saves summary.</td>
+          <td>DB repos, GitHub API, Anthropic API</td>
+          <td>DB <code>summaries</code></td>
+        </tr>
+        <tr>
+          <td class="td-file">site_generator.py</td>
+          <td>Reads DB, computes multi-period deltas, renders 200 repo cards, builds self-contained <code>index.html</code>.</td>
+          <td>DB (latest snapshot + summaries + history)</td>
+          <td><code>docs/index.html</code>, <code>docs/data.json</code></td>
+        </tr>
+        <tr>
+          <td class="td-file">import_historical.py</td>
+          <td>One-time importer: reads CSV snapshots from <code>data/Historical Data/</code>, computes scores, bulk-inserts into DB.</td>
+          <td>CSV files, DB (to check existing dates)</td>
+          <td>DB <code>daily_snapshots</code></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h3>Configuration &amp; automation</h3>
+    <table>
+      <thead><tr><th>File</th><th>Purpose</th><th>Committed to Git?</th></tr></thead>
+      <tbody>
+        <tr><td class="td-file">.env</td><td>Live secrets: GITHUB_PAT, ANTHROPIC_API_KEY and optional overrides.</td><td class="td-required">NO — gitignored</td></tr>
+        <tr><td class="td-file">.env.example</td><td>Template listing every variable with placeholders and comments.</td><td class="badge badge-green">Yes</td></tr>
+        <tr><td class="td-file">requirements.txt</td><td><code>requests&gt;=2.32</code>, <code>python-dotenv&gt;=1.0</code>, <code>anthropic&gt;=0.40.0</code></td><td class="badge badge-green">Yes</td></tr>
+        <tr><td class="td-file">requirements-dev.txt</td><td><code>pytest&gt;=8.0</code> for running the test suite.</td><td class="badge badge-green">Yes</td></tr>
+        <tr><td class="td-file">github-trending-task.xml</td><td>Windows Task Scheduler import file. Runs <code>.venv\Scripts\python.exe run_pipeline.py</code> at 8:00 AM daily.</td><td class="badge badge-green">Yes</td></tr>
+        <tr><td class="td-file">.gitignore</td><td>Excludes: <code>.env</code>, <code>.venv/</code>, <code>data/trending.db</code>, <code>data/*.json</code>, <code>logs/</code>, <code>__pycache__/</code>, <code>docs/data.json</code></td><td class="badge badge-green">Yes</td></tr>
+      </tbody>
+    </table>
+
+    <h3>Generated &amp; stored files</h3>
+    <table>
+      <thead><tr><th>Path</th><th>What it is</th><th>Committed?</th></tr></thead>
+      <tbody>
+        <tr><td class="td-file">data/trending.db</td><td>SQLite database. All daily snapshots and summaries. Grows ~100–120k rows per day.</td><td class="td-required">NO — gitignored</td></tr>
+        <tr><td class="td-file">data/Historical Data/*.csv</td><td>Raw historical CSV files from previous pipeline runs used to seed the DB.</td><td class="td-required">NO — gitignored</td></tr>
+        <tr><td class="td-file">docs/index.html</td><td>The rendered website (~960KB). Rebuilt daily and pushed to GitHub to trigger Cloudflare deploy.</td><td class="badge badge-green">Yes — committed daily</td></tr>
+        <tr><td class="td-file">docs/about.html</td><td>Static about/documentation page. Updated manually when pipeline behaviour changes.</td><td class="badge badge-green">Yes</td></tr>
+        <tr><td class="td-file">docs/pipeline.html</td><td>This file.</td><td class="badge badge-green">Yes</td></tr>
+        <tr><td class="td-file">docs/data.json</td><td>JSON copy of the 200 repos (used by client-side JS for filtering). Regenerated with index.html.</td><td class="td-required">NO — gitignored</td></tr>
+        <tr><td class="td-file">logs/run_YYYY-MM-DD.log</td><td>Per-run log file. INFO level by default. Contains full fetch/rank/summarise/generate output.</td><td class="td-required">NO — gitignored</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- ====================== DATA FLOW ====================== -->
+  <section class="section" id="data-flow">
+    <h2>End-to-End Data Flow</h2>
+
+    <div class="card">
+      <div class="card-title"><span class="badge badge-blue">Step 1</span> &nbsp;Fetch</div>
+      <p><code>fetcher.py::fetch_and_rank(cfg)</code> is called by <code>run_pipeline.py</code>.</p>
+      <ol>
+        <li><code>storage.rotate_snapshots()</code> is called — this is now a no-op (SQLite retains history natively).</li>
+        <li><code>github_client.fetch_trending(pat, min_stars, days_back)</code> is called as a generator, yielding batches of raw API item dicts.</li>
+        <li>Each dict is converted to a <code>RawRepo</code> dataclass via <code>RawRepo.from_api_dict()</code>.</li>
+        <li><code>ranker.rank_repos(raw_repos, top_n)</code> deduplicates, scores, sorts, and caps to 200.</li>
+        <li><code>storage.load_previous_repos()</code> reads the second-most-recent run from the DB.</li>
+        <li><code>storage.compute_star_deltas(current, previous)</code> computes per-repo star differences and attaches them as <code>stars_7d</code> on each <code>RankedRepo</code>.</li>
+        <li><code>storage.save_repos(data_dir, ranked_dicts)</code> inserts into <code>daily_snapshots</code> for today's date.</li>
+      </ol>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><span class="badge badge-purple">Step 2</span> &nbsp;Summarise</div>
+      <p><code>summarizer.py::summarize_all(cfg)</code> is called next.</p>
+      <ol>
+        <li><code>storage.load_repos(data_dir)</code> loads today's 200 repos from DB.</li>
+        <li><code>storage.load_summaries(data_dir)</code> loads all existing summaries (keyed by html_url).</li>
+        <li>For each repo whose <code>html_url</code> is <strong>not</strong> in the summaries dict (or has an <code>ERROR:</code> prefix), a new summary is generated.</li>
+        <li><code>collect_repo_context(owner, repo, token)</code> fetches from GitHub: README (≤8000 chars), file tree (top 200 paths), key config files, entry-point source. Total context capped at 20,000 chars.</li>
+        <li>Context is sent to Claude with a prompt requesting a 2–4 sentence summary and 1–5 tags. Response is JSON-parsed.</li>
+        <li>After each successful summary, <code>storage.save_summaries()</code> upserts immediately — partial progress is never lost on crash.</li>
+      </ol>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><span class="badge badge-green">Step 3</span> &nbsp;Generate Site</div>
+      <p><code>site_generator.py::generate(cfg)</code> is called last.</p>
+      <ol>
+        <li><code>storage.load_repos(data_dir)</code> loads today's ranked repos.</li>
+        <li><code>storage.load_summaries(data_dir)</code> loads all summaries.</li>
+        <li><code>_enrich_repos()</code> merges summary + tags onto each repo dict.</li>
+        <li>For each repo, <code>storage.get_history(data_dir, github_id, days=31)</code> is called to retrieve up to 31 days of daily star counts. From this, <code>stars_24h</code>, <code>stars_7d</code>, and <code>stars_30d</code> deltas are computed by finding the closest snapshot ±2 days ago for each window.</li>
+        <li><code>_collect_unique_languages()</code> and <code>_collect_top_tags()</code> build the filter metadata.</li>
+        <li><code>_render_html()</code> generates the full <code>index.html</code> string — all CSS and JS inlined.</li>
+        <li>Result is written atomically to <code>docs/index.html</code>.</li>
+      </ol>
+    </div>
+  </section>
+
+  <!-- ====================== ENV VARS ====================== -->
+  <section class="section" id="env-vars">
+    <h2>Environment Variables</h2>
+    <p>All variables are loaded from <code>.env</code> by <code>config.py::load_config()</code> using <code>python-dotenv</code>. The two required variables will raise <code>EnvironmentError</code> if missing.</p>
+
+    <table>
+      <thead><tr><th>Variable</th><th>Required?</th><th>Default</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr>
+          <td class="td-name">GITHUB_PAT</td>
+          <td class="td-required">Required</td>
+          <td>—</td>
+          <td>GitHub Personal Access Token. Needs <code>public_repo</code> scope (read-only). Used as <code>Authorization: Bearer &lt;token&gt;</code> on all GitHub API calls. Without it the Search API rate limit drops from 30 to 10 requests/min.</td>
+        </tr>
+        <tr>
+          <td class="td-name">ANTHROPIC_API_KEY</td>
+          <td class="td-required">Required</td>
+          <td>—</td>
+          <td>Anthropic API key for Claude. Used only in <code>summarizer.py</code>. Costs ~$0.002 per new repo summary on Haiku.</td>
+        </tr>
+        <tr>
+          <td class="td-name">FETCH_MIN_STARS</td>
+          <td class="td-optional">Optional</td>
+          <td class="td-default">50</td>
+          <td>Minimum star count for a repo to be included in the GitHub search query (<code>stars:&gt;=N</code>). Lower values return more results but increase API pages needed.</td>
+        </tr>
+        <tr>
+          <td class="td-name">FETCH_DAYS_BACK</td>
+          <td class="td-optional">Optional</td>
+          <td class="td-default">30</td>
+          <td>How many days back to look for recently-pushed repos (<code>pushed:&gt;=YYYY-MM-DD</code>). Controls recency of results.</td>
+        </tr>
+        <tr>
+          <td class="td-name">TOP_N_REPOS</td>
+          <td class="td-optional">Optional</td>
+          <td class="td-default">200</td>
+          <td>Maximum repos to keep after ranking. The ranker scores all fetched repos and takes the top N by trending score.</td>
+        </tr>
+        <tr>
+          <td class="td-name">SUMMARIZE_MODEL</td>
+          <td class="td-optional">Optional</td>
+          <td class="td-default">haiku</td>
+          <td><code>haiku</code> → <code>claude-haiku-4-5-20251001</code> (fast, cheap, ~$0.002/repo). <code>sonnet</code> → <code>claude-sonnet-4-6</code> (more detailed, ~10× cost). Set in <code>summarizer.py::MODELS</code> dict.</td>
+        </tr>
+        <tr>
+          <td class="td-name">LOG_LEVEL</td>
+          <td class="td-optional">Optional</td>
+          <td class="td-default">INFO</td>
+          <td>Python logging level. <code>DEBUG</code> gives per-API-call detail. <code>WARNING</code> silences most output.</td>
+        </tr>
+        <tr>
+          <td class="td-name">SITE_TITLE</td>
+          <td class="td-optional">Optional</td>
+          <td class="td-default">GitHub Trending</td>
+          <td>The H1 and <code>&lt;title&gt;</code> text on the generated website.</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- ====================== SCHEDULER ====================== -->
+  <section class="section" id="scheduler">
+    <h2>Task Scheduler</h2>
+    <p>The pipeline is registered as a Windows Task Scheduler job via <code>github-trending-task.xml</code>.</p>
+
+    <div class="two-col">
+      <div class="card">
+        <div class="card-title">Trigger settings</div>
+        <table>
+          <tr><td><strong>Schedule</strong></td><td>Daily at <strong>8:00 AM</strong></td></tr>
+          <tr><td><strong>Runs as</strong></td><td>SYSTEM account (no login required)</td></tr>
+          <tr><td><strong>Run level</strong></td><td>Highest available</td></tr>
+          <tr><td><strong>Missed runs</strong></td><td>Starts immediately when machine is next on (<code>StartWhenAvailable=true</code>)</td></tr>
+          <tr><td><strong>Network required</strong></td><td>Yes (<code>RunOnlyIfNetworkAvailable=true</code>)</td></tr>
+        </table>
+      </div>
+      <div class="card">
+        <div class="card-title">Failure handling</div>
+        <table>
+          <tr><td><strong>Timeout</strong></td><td>1 hour hard limit</td></tr>
+          <tr><td><strong>On failure</strong></td><td>Retry up to <strong>3 times</strong>, 5 min apart</td></tr>
+          <tr><td><strong>Multiple instances</strong></td><td>IgnoreNew — only one run at a time</td></tr>
+          <tr><td><strong>Exit code</strong></td><td><code>run_pipeline.py</code> exits <code>0</code> on success, <code>1</code> on fatal error</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <h4>Command that runs</h4>
+    <pre>A:\Claude\workflow test\.venv\Scripts\python.exe  "A:\Claude\workflow test\run_pipeline.py"
+Working directory: A:\Claude\workflow test</pre>
+
+    <h4>Re-register after editing XML</h4>
+    <pre># Run in Administrator PowerShell:
+schtasks /delete /tn "GitHub Trending Repos Pipeline" /f
+schtasks /create /xml "A:\Claude\workflow test\github-trending-task.xml" /tn "GitHub Trending Repos Pipeline"</pre>
+  </section>
+
+  <!-- ====================== GITHUB API ====================== -->
+  <section class="section" id="github-api">
+    <h2>GitHub API — <code>github_client.py</code></h2>
+
+    <h3>Search query</h3>
+    <pre>GET https://api.github.com/search/repositories
+    ?q=pushed:>=YYYY-MM-DD stars:>=50
+    &sort=stars
+    &order=desc
+    &per_page=30
+    &page=N
+
+Headers:
+    Accept: application/vnd.github+json
+    X-GitHub-Api-Version: 2022-11-28
+    Authorization: Bearer &lt;GITHUB_PAT&gt;</pre>
+
+    <p>The <code>pushed</code> date is computed as <code>today - FETCH_DAYS_BACK</code> days. <code>stars</code> threshold is <code>FETCH_MIN_STARS</code>.</p>
+
+    <div class="callout yellow">
+      <strong>GitHub Search API cap:</strong> The Search API returns a maximum of <strong>1,000 results</strong> per query regardless of how many repos match. On a typical day 116k+ repos match; only the top 1,000 by star count are accessible. The pipeline fetches all 1,000 and lets the ranker pick the top 200 by trending score — so the final 200 are not just the most-starred, they are the most-trending within the top 1,000 most-starred.
+    </div>
+
+    <h3>Pagination &amp; rate limiting</h3>
+    <table>
+      <thead><tr><th>Parameter</th><th>Value</th><th>Why</th></tr></thead>
+      <tbody>
+        <tr><td>Results per page</td><td>30 (API default)</td><td>Search API maximum is 100 but 30 is default</td></tr>
+        <tr><td>Pages fetched</td><td>Up to 34 (1,000 ÷ 30 ≈ 34)</td><td>Stops when no more results</td></tr>
+        <tr><td>Delay between pages</td><td>2.5 seconds</td><td>Authenticated rate limit: 30 requests/min = 1 req/2s. 2.5s adds safety margin.</td></tr>
+        <tr><td>Rate limit response</td><td>HTTP 429 or <code>X-RateLimit-Remaining: 0</code></td><td>Client sleeps until <code>X-RateLimit-Reset</code> timestamp</td></tr>
+        <tr><td>Auth error</td><td>HTTP 401</td><td>Raises <code>AuthenticationError</code> — pipeline aborts with exit code 1</td></tr>
+      </tbody>
+    </table>
+
+    <h3>Fields mapped from API response</h3>
+    <table>
+      <thead><tr><th>API field</th><th>RawRepo field</th><th>Notes</th></tr></thead>
+      <tbody>
+        <tr><td><code>id</code></td><td><code>github_id</code></td><td>Stable integer ID, used as primary key in DB</td></tr>
+        <tr><td><code>full_name</code></td><td><code>full_name</code></td><td>"owner/repo"</td></tr>
+        <tr><td><code>name</code></td><td><code>name</code></td><td>Repo name only</td></tr>
+        <tr><td><code>description</code></td><td><code>description</code></td><td>Nullable</td></tr>
+        <tr><td><code>stargazers_count</code></td><td><code>stars</code></td><td>Renamed for brevity</td></tr>
+        <tr><td><code>forks_count</code></td><td><code>forks</code></td><td></td></tr>
+        <tr><td><code>watchers_count</code></td><td><code>watchers</code></td><td>Usually equals stargazers_count</td></tr>
+        <tr><td><code>open_issues_count</code></td><td><code>open_issues</code></td><td></td></tr>
+        <tr><td><code>language</code></td><td><code>language</code></td><td>Primary language detected by GitHub Linguist. Nullable.</td></tr>
+        <tr><td><code>topics</code></td><td><code>topics</code></td><td>List of strings. Requires <code>Accept: application/vnd.github+json</code> to be returned.</td></tr>
+        <tr><td><code>license.spdx_id</code></td><td><code>license</code></td><td>e.g. "MIT", "Apache-2.0". Nullable.</td></tr>
+        <tr><td><code>homepage</code></td><td><code>homepage</code></td><td>Nullable</td></tr>
+        <tr><td><code>html_url</code></td><td><code>html_url</code></td><td>Used as unique key in summaries table</td></tr>
+        <tr><td><code>created_at</code></td><td><code>created_at</code></td><td>ISO 8601 string. Used to compute repo age for scoring.</td></tr>
+        <tr><td><code>updated_at</code></td><td><code>updated_at</code></td><td>Stored but not used in scoring</td></tr>
+        <tr><td><code>pushed_at</code></td><td><code>pushed_at</code></td><td>ISO 8601 string. Used for recency_bonus calculation.</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- ====================== FETCHER ====================== -->
+  <section class="section" id="fetcher">
+    <h2>Fetcher — <code>fetcher.py</code></h2>
+    <p>Public API: <code>fetch_and_rank(cfg: dict) → list[dict]</code></p>
+
+    <h3>Execution steps</h3>
+    <ol>
+      <li><code>storage.rotate_snapshots(data_dir)</code> — no-op with SQLite backend (returns <code>False</code>), kept for compatibility.</li>
+      <li>Calls <code>github_client.fetch_trending()</code> as a generator, accumulating all raw item dicts.</li>
+      <li>Converts each valid item to <code>RawRepo</code> via <code>RawRepo.from_api_dict()</code>. Malformed items are logged and skipped.</li>
+      <li>Calls <code>ranker.rank_repos(raw_repos, top_n)</code> → returns sorted <code>list[RankedRepo]</code>.</li>
+      <li>Loads previous snapshot via <code>storage.load_previous_repos(data_dir)</code> (the second-most-recent run_date in the DB).</li>
+      <li>Calls <code>storage.compute_star_deltas(current_dicts, previous)</code> → <code>dict[github_id → delta | None]</code>.</li>
+      <li>Attaches delta to each <code>RankedRepo.stars_7d</code> field (note: name is legacy — this is actually a 1-run delta, i.e. roughly 24h).</li>
+      <li>Calls <code>storage.save_repos(data_dir, final_dicts)</code> — inserts all 200 rows for today.</li>
+    </ol>
+
+    <div class="callout">
+      <strong>stars_7d naming note:</strong> The <code>stars_7d</code> field on the DB row and dataclass is a <em>1-day delta</em> (today vs. the previous pipeline run). The name is a legacy artefact. Actual 7-day and 30-day deltas are computed fresh in <code>site_generator.py</code> using <code>storage.get_history()</code>.
+    </div>
+  </section>
+
+  <!-- ====================== RANKER ====================== -->
+  <section class="section" id="ranker">
+    <h2>Ranker &amp; Scoring — <code>ranker.py</code></h2>
+    <p>Public API: <code>score(repo: RawRepo) → float</code> and <code>rank_repos(raw_list, top_n) → list[RankedRepo]</code></p>
+
+    <h3>Composite score formula</h3>
+    <pre>score = star_velocity  × 0.50
+      + fork_ratio     × 0.15
+      + watcher_ratio  × 0.10
+      + recency_bonus  × 0.20
+      + issue_health   × 0.05</pre>
+
+    <table>
+      <thead><tr><th>Signal</th><th>Weight</th><th>Formula</th><th>Range</th><th>Intent</th></tr></thead>
+      <tbody>
+        <tr>
+          <td class="td-name">star_velocity</td>
+          <td class="td-accent">50%</td>
+          <td><code>stars / max(1, min(365, repo_age_days))</code></td>
+          <td>0 → ∞ (uncapped)</td>
+          <td>Stars per day of existence. Dominant signal. A 6-month-old repo with 18k stars scores higher than a 10-year-old repo with 50k stars.</td>
+        </tr>
+        <tr>
+          <td class="td-name">fork_ratio</td>
+          <td class="td-accent">15%</td>
+          <td><code>forks / max(1, stars)</code></td>
+          <td>0 → ~1 (rarely &gt;1)</td>
+          <td>People building on the code. A repo where 30% of stargazers also fork it is likely a tool/library people actively use.</td>
+        </tr>
+        <tr>
+          <td class="td-name">watcher_ratio</td>
+          <td class="td-accent">10%</td>
+          <td><code>watchers / max(1, stars)</code></td>
+          <td>0 → 1 (usually ~1.0)</td>
+          <td>Watchers opt-in to notifications, indicating deeper engagement than passive stars.</td>
+        </tr>
+        <tr>
+          <td class="td-name">recency_bonus</td>
+          <td class="td-accent">20%</td>
+          <td><code>max(0, 1 - days_since_push / 30)</code></td>
+          <td>0 → 1.0</td>
+          <td>Linear decay over 30 days since last push. Full bonus if pushed today; zero bonus if not pushed in 30+ days. Penalises abandoned repos.</td>
+        </tr>
+        <tr>
+          <td class="td-name">issue_health</td>
+          <td class="td-accent">5%</td>
+          <td><code>1 / (1 + (open_issues / max(1, stars)) × 10)</code></td>
+          <td>0 → 1.0</td>
+          <td>Penalises repos drowning in issues. A repo with open_issues = 10% of stars scores ~0.5; one with open_issues = 1% of stars scores ~0.91.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h3>rank_repos() pipeline</h3>
+    <ol>
+      <li><strong>Deduplicate</strong> by <code>github_id</code> — keep the entry with the higher star count if duplicates exist across API pages.</li>
+      <li><strong>Score</strong> each unique repo via <code>score()</code>.</li>
+      <li><strong>Sort</strong> descending by score.</li>
+      <li><strong>Slice</strong> to top <code>TOP_N_REPOS</code> (default 200).</li>
+      <li><strong>Assign ranks</strong> 1 through N.</li>
+    </ol>
+
+    <div class="callout yellow">
+      <strong>Important:</strong> <code>score()</code> uses <code>date.today()</code> for computing repo age and recency. Historical imports use a patched version that uses the snapshot date instead — ensuring historical scores are accurate for that point in time.
+    </div>
+  </section>
+
+  <!-- ====================== SUMMARIZER ====================== -->
+  <section class="section" id="summarizer">
+    <h2>AI Summarizer — <code>summarizer.py</code></h2>
+    <p>Public API: <code>summarize_all(cfg: dict) → int</code> (returns count of new summaries)</p>
+
+    <h3>Context collection</h3>
+    <p>For each un-summarised repo, <code>collect_repo_context(owner, repo, token)</code> assembles up to <strong>20,000 characters</strong> of context in this priority order:</p>
+    <table>
+      <thead><tr><th>Source</th><th>Max chars</th><th>API endpoint</th></tr></thead>
+      <tbody>
+        <tr><td>Repository metadata (name, description, language, stars, topics, license)</td><td>~200</td><td><code>GET /repos/{owner}/{repo}</code></td></tr>
+        <tr><td>README (decoded from base64)</td><td>8,000</td><td><code>GET /repos/{owner}/{repo}/readme</code></td></tr>
+        <tr><td>File tree (blob paths only, up to 200 paths)</td><td>~3,000</td><td><code>GET /repos/{owner}/{repo}/git/trees/{branch}?recursive=1</code></td></tr>
+        <tr><td>Key config files (package.json, pyproject.toml, Cargo.toml, etc.)</td><td>3,000 each</td><td><code>GET /repos/{owner}/{repo}/contents/{path}</code></td></tr>
+        <tr><td>GitHub Actions workflows listing</td><td>~500</td><td><code>GET /repos/{owner}/{repo}/contents/.github/workflows</code></td></tr>
+        <tr><td>Entry-point source files (main.py, index.js, app.ts, etc.)</td><td>3,000 each</td><td><code>GET /repos/{owner}/{repo}/contents/{path}</code></td></tr>
+      </tbody>
+    </table>
+
+    <h3>Claude prompt</h3>
+    <pre>"You are analyzing a GitHub repository. Based on the context below, write a single
+paragraph of 2 to 4 sentences that clearly describes what this repository does — its
+purpose, who it is for, and what makes it useful. Then choose 1 to 5 short tags
+(lowercase, no spaces, use hyphens if needed) that best categorize the repository
+(e.g. by language, domain, or type of tool).
+
+Return only valid JSON with exactly two keys:
+- \"summary\": a string containing the 2-4 sentence paragraph
+- \"tags\": an array of 1-5 tag strings
+
+Example format:
+{\"summary\": \"...\", \"tags\": [\"tag1\", \"tag2\"]}
+
+---
+
+{context}"</pre>
+
+    <h3>Model settings</h3>
+    <table>
+      <thead><tr><th>Setting</th><th>Value</th></tr></thead>
+      <tbody>
+        <tr><td>Default model</td><td><code>claude-haiku-4-5-20251001</code></td></tr>
+        <tr><td>Fast model</td><td><code>claude-sonnet-4-6</code> (set <code>SUMMARIZE_MODEL=sonnet</code>)</td></tr>
+        <tr><td>max_tokens</td><td>300</td></tr>
+        <tr><td>Rate limit handling</td><td>Anthropic SDK auto-retries 429s with exponential backoff</td></tr>
+        <tr><td>Cost estimate (Haiku)</td><td>~$0.002 per repo (input: ~5k tokens, output: ~100 tokens)</td></tr>
+      </tbody>
+    </table>
+
+    <h3>Caching logic</h3>
+    <p>A repo is skipped if its <code>html_url</code> already exists in the summaries table <strong>and</strong> the summary does not start with <code>"ERROR:"</code>. Error-prefixed summaries are retried on the next run. This means on most daily runs only 0–5 new summaries are generated.</p>
+
+    <h3>Incremental saves</h3>
+    <p><code>storage.save_summaries()</code> is called after <em>every single repo</em> — not at the end. If the pipeline crashes or is interrupted mid-run, all summaries up to that point are preserved in the DB.</p>
+  </section>
+
+  <!-- ====================== SITE GENERATOR ====================== -->
+  <section class="section" id="site-generator">
+    <h2>Site Generator — <code>site_generator.py</code></h2>
+    <p>Public API: <code>generate(cfg: dict) → int</code> (returns card count)</p>
+
+    <h3>What it produces</h3>
+    <table>
+      <thead><tr><th>Output file</th><th>Size</th><th>Content</th></tr></thead>
+      <tbody>
+        <tr><td class="td-file">docs/index.html</td><td>~960 KB</td><td>Fully self-contained HTML — all CSS, JS, and 200 repo cards inlined. No external dependencies. Works offline.</td></tr>
+        <tr><td class="td-file">docs/data.json</td><td>~300 KB</td><td>JSON array of the 200 repos for potential external use. Not committed to git.</td></tr>
+      </tbody>
+    </table>
+
+    <h3>Multi-period delta computation</h3>
+    <p>For each repo, <code>storage.get_history(data_dir, github_id, days=31)</code> returns up to 31 rows of <code>{run_date, stars, rank, trending_score}</code> ordered oldest-first. Deltas are then computed:</p>
+    <pre>stars_by_date = {row["run_date"]: row["stars"] for row in history}
+
+def delta_n_days(n):
+    for offset in range(n, n + 3):  # ±2 day tolerance
+        d = (date.today() - timedelta(days=offset)).isoformat()
+        if d in stars_by_date:
+            return current_stars - stars_by_date[d]
+    return None  # no data for this window
+
+stars_24h = delta_n_days(1)   # vs ~1 day ago
+stars_7d  = delta_n_days(7)   # vs ~7 days ago
+stars_30d = delta_n_days(30)  # vs ~30 days ago</pre>
+
+    <p>If no snapshot exists for a given window (e.g. the repo is new to the list), the value is <code>None</code> and the card shows no badge for that period.</p>
+
+    <h3>Tag cloud generation</h3>
+    <p><code>_collect_top_tags(repos, limit=60)</code> counts both AI-generated <code>tags</code> and GitHub <code>topics</code> across all 200 repos. Returns up to 60 <code>(tag, count)</code> tuples sorted by frequency. These are rendered as clickable pills in the tag cloud section.</p>
+
+    <h3>Language colour map</h3>
+    <p>29 languages have explicit colours defined in the <code>LANG_COLOURS</code> dict (Python, JavaScript, TypeScript, Go, Rust, etc.). Unknown languages use <code>#8b949e</code> (muted grey). Colours are applied as inline <code>background</code> styles on language dot indicators.</p>
+  </section>
+
+  <!-- ====================== STORAGE ====================== -->
+  <section class="section" id="storage">
+    <h2>Storage Module — <code>storage.py</code></h2>
+
+    <h3>Public API</h3>
+    <table>
+      <thead><tr><th>Function</th><th>Returns</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr><td class="td-name">get_db(data_dir)</td><td><code>sqlite3.Connection</code></td><td>Opens DB, initialises schema if needed (WAL mode, FK enforcement). Caller must close.</td></tr>
+        <tr><td class="td-name">save_repos(data_dir, repos, run_date=None)</td><td><code>None</code></td><td>Deletes existing rows for run_date, then bulk-inserts. Idempotent — re-running the pipeline on the same day is safe.</td></tr>
+        <tr><td class="td-name">load_repos(data_dir, run_date=None)</td><td><code>list[dict]</code></td><td>Returns repos for the specified date, or the most recent run if None. Ordered by rank ASC.</td></tr>
+        <tr><td class="td-name">load_previous_repos(data_dir)</td><td><code>list[dict]</code></td><td>Returns repos from the second-most-recent run_date. Empty list if fewer than 2 dates exist.</td></tr>
+        <tr><td class="td-name">get_run_dates(data_dir)</td><td><code>list[str]</code></td><td>All distinct run_dates in the DB, newest first.</td></tr>
+        <tr><td class="td-name">get_history(data_dir, github_id, days=30)</td><td><code>list[dict]</code></td><td>Per-day rows for one repo: {run_date, stars, rank, trending_score}. Ordered oldest-first. Used by site_generator for delta computation.</td></tr>
+        <tr><td class="td-name">save_summaries(data_dir, summaries)</td><td><code>None</code></td><td>Upserts all entries via <code>INSERT OR REPLACE</code>. Called after every single repo summary.</td></tr>
+        <tr><td class="td-name">load_summaries(data_dir)</td><td><code>dict[url → {summary, tags}]</code></td><td>Full summaries table as a dict keyed by html_url.</td></tr>
+        <tr><td class="td-name">compute_star_deltas(current, prev)</td><td><code>dict[id → int|None]</code></td><td>Helper: computes star differences between two repo lists. Pure function.</td></tr>
+        <tr><td class="td-name">write_json(path, obj)</td><td><code>None</code></td><td>Atomic JSON write (write to .tmp, then rename). Used for docs/data.json.</td></tr>
+        <tr><td class="td-name">read_json(path, default)</td><td><code>Any</code></td><td>Reads JSON or returns default. General utility, not used for DB-backed data.</td></tr>
+        <tr><td class="td-name">rotate_snapshots(data_dir)</td><td><code>False</code></td><td>No-op. Kept for backward-compat with fetcher.py.</td></tr>
+      </tbody>
+    </table>
+
+    <h3>SQLite settings</h3>
+    <pre>PRAGMA journal_mode = WAL;   -- concurrent reads during writes
+PRAGMA foreign_keys = ON;    -- enforce FK constraints</pre>
+  </section>
+
+  <!-- ====================== DB SCHEMA ====================== -->
+  <section class="section" id="db-schema">
+    <h2>Database Schema</h2>
+    <p>Database file: <code>data/trending.db</code> (SQLite 3, WAL mode)</p>
+
+    <h3>Table: <code>daily_snapshots</code></h3>
+    <pre>CREATE TABLE daily_snapshots (
+    run_date        TEXT     NOT NULL,          -- YYYY-MM-DD
+    github_id       INTEGER  NOT NULL,          -- GitHub repo ID (stable)
+    full_name       TEXT     NOT NULL,          -- "owner/repo"
+    name            TEXT     NOT NULL,          -- repo name only
+    description     TEXT,                       -- nullable
+    stars           INTEGER  DEFAULT 0,
+    forks           INTEGER  DEFAULT 0,
+    watchers        INTEGER  DEFAULT 0,
+    open_issues     INTEGER  DEFAULT 0,
+    language        TEXT,                       -- nullable; primary language
+    topics          TEXT     DEFAULT '[]',      -- JSON array of strings
+    license         TEXT,                       -- SPDX ID, nullable
+    homepage        TEXT,                       -- nullable
+    html_url        TEXT     NOT NULL,          -- "https://github.com/owner/repo"
+    created_at      TEXT     DEFAULT '',        -- ISO 8601
+    updated_at      TEXT     DEFAULT '',
+    pushed_at       TEXT     DEFAULT '',        -- ISO 8601; used for recency_bonus
+    trending_score  REAL     DEFAULT 0.0,       -- composite score from ranker.py
+    stars_7d        INTEGER,                    -- delta vs previous run (1-day, legacy name)
+    rank            INTEGER  DEFAULT 0,         -- 1 = most trending
+    PRIMARY KEY (run_date, github_id)
+);
+
+CREATE INDEX idx_snap_date ON daily_snapshots (run_date);
+CREATE INDEX idx_snap_id   ON daily_snapshots (github_id);
+CREATE INDEX idx_snap_url  ON daily_snapshots (html_url);</pre>
+
+    <p>Current size: <strong>~1.5M rows</strong> across 17 dates (16 historical + daily pipeline runs).</p>
+
+    <h3>Table: <code>summaries</code></h3>
+    <pre>CREATE TABLE summaries (
+    html_url       TEXT  PRIMARY KEY,           -- "https://github.com/owner/repo"
+    summary        TEXT  DEFAULT '',            -- 2-4 sentence Claude-generated description
+    tags           TEXT  DEFAULT '[]',          -- JSON array of tag strings (1-5 tags)
+    summarized_at  TEXT  NOT NULL               -- ISO 8601 timestamp of last summary
+);</pre>
+
+    <p>Current size: <strong>201 rows</strong> (grows by 0–5 rows per daily run as new repos appear).</p>
+
+    <h3>Key query patterns</h3>
+    <pre>-- Load today's top repos
+SELECT * FROM daily_snapshots WHERE run_date = '2026-05-29' ORDER BY rank ASC;
+
+-- Get star history for one repo (for delta computation)
+SELECT run_date, stars FROM daily_snapshots
+WHERE github_id = 12345 ORDER BY run_date ASC LIMIT 31;
+
+-- Find all dates in the DB
+SELECT DISTINCT run_date FROM daily_snapshots ORDER BY run_date DESC;
+
+-- Check if a repo has already been summarised
+SELECT summary FROM summaries WHERE html_url = 'https://github.com/owner/repo';</pre>
+  </section>
+
+  <!-- ====================== HISTORICAL ====================== -->
+  <section class="section" id="historical">
+    <h2>Historical Import — <code>import_historical.py</code></h2>
+    <p>One-time script to load CSV snapshots from previous pipeline runs into the SQLite DB.</p>
+
+    <h3>CSV format expected</h3>
+    <pre>snapshot_date,github_id,full_name,name,description,stars,forks,watchers,
+open_issues,language,topics,license,homepage,html_url,created_at,updated_at,pushed_at
+
+# topics is pipe-separated: "python|cli|tool"
+# snapshot_date is YYYY-MM-DD (read from the column, not the filename)</pre>
+
+    <h3>Import process per file</h3>
+    <ol>
+      <li>Read all rows into memory (40MB file ≈ 117k rows).</li>
+      <li>Determine <code>run_date</code> from the <code>snapshot_date</code> column of the first row.</li>
+      <li>Skip the file if that date already has rows in the DB.</li>
+      <li>Compute trending score for each row using <code>snapshot_date</code> as "today" (so historical scores reflect the correct point in time).</li>
+      <li>Sort rows by score descending, assign ranks 1–N.</li>
+      <li>Bulk-insert in batches of 2,000 using <code>INSERT OR IGNORE</code> (skips duplicate <code>(run_date, github_id)</code> pairs).</li>
+    </ol>
+
+    <h3>Post-import back-fill</h3>
+    <p>After all CSV files are loaded, a single SQL UPDATE computes <code>stars_7d</code> for every null row by comparing to the nearest prior run:</p>
+    <pre>UPDATE daily_snapshots
+SET stars_7d = stars - (
+    SELECT prev.stars FROM daily_snapshots prev
+    WHERE prev.github_id = daily_snapshots.github_id
+      AND prev.run_date &lt; daily_snapshots.run_date
+    ORDER BY prev.run_date DESC LIMIT 1
+)
+WHERE stars_7d IS NULL AND (&lt;prior snapshot exists&gt;);</pre>
+
+    <h3>Re-running safely</h3>
+    <p>The script is idempotent. Run it again with new CSV files — existing dates are skipped entirely, new dates are inserted. Use <code>--dry-run</code> flag to preview without writing.</p>
+  </section>
+
+  <!-- ====================== FILTER LOGIC ====================== -->
+  <section class="section" id="filter-logic">
+    <h2>Filter Logic &amp; Thresholds</h2>
+    <p>All filtering happens client-side in JavaScript embedded in <code>docs/index.html</code>. No server is involved.</p>
+
+    <h3>Period filter — <code>periodOk(card)</code></h3>
+    <p>The period filter uses a <strong>percentage of total stars</strong> as its threshold:</p>
+    <pre>function periodOk(card) {
+  if (period === 'all') return true;
+
+  var gained;     // stars gained in the window
+  var threshold;  // minimum fraction of total stars required
+
+  if      (period === '24h') { gained = card.dataset.stars24h; threshold = 0.30; }
+  else if (period === '7d')  { gained = card.dataset.stars7d;  threshold = 0.60; }
+  else if (period === '30d') { gained = card.dataset.stars30d; threshold = 1.20; }
+
+  if (gained === '' || gained == null) return true; // no data → show repo
+
+  var total = parseInt(card.dataset.stars, 10);
+  if (total === 0) return true;
+
+  return (parseInt(gained, 10) / total) >= threshold;
+}</pre>
+
+    <table>
+      <thead><tr><th>Period</th><th>Threshold</th><th>Meaning</th><th>Example: 10k star repo</th></tr></thead>
+      <tbody>
+        <tr>
+          <td class="td-accent">24h</td>
+          <td class="td-accent">≥ 30%</td>
+          <td>Gained ≥ 30% of total stars in a single day — genuine viral spike</td>
+          <td>Must gain ≥ 3,000 stars yesterday</td>
+        </tr>
+        <tr>
+          <td class="td-accent">7d</td>
+          <td class="td-accent">≥ 60%</td>
+          <td>Gained ≥ 60% of total stars over the past week — sustained rapid growth</td>
+          <td>Must gain ≥ 6,000 stars in 7 days</td>
+        </tr>
+        <tr>
+          <td class="td-accent">30d</td>
+          <td class="td-accent">≥ 120%</td>
+          <td>Gained more stars in one month than its entire prior history — explosive breakout</td>
+          <td>Must gain ≥ 12,000 stars in 30 days</td>
+        </tr>
+        <tr>
+          <td>All</td>
+          <td>—</td>
+          <td>No filter applied; all 200 repos shown</td>
+          <td>—</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="callout yellow">
+      <strong>Missing data behaviour:</strong> If a repo has no historical data for a given window (e.g. it's new to the list and we don't have a snapshot from 7 days ago), it is <em>shown</em> rather than hidden. The filter only excludes repos where we have data AND the threshold is not met.
+    </div>
+
+    <h3>Language filter — <code>langOk</code></h3>
+    <p>Exact string match: <code>card.dataset.lang === selectedLanguage</code>. Empty selection = all languages. The dropdown is populated from the unique non-null <code>language</code> values in today's 200 repos.</p>
+
+    <h3>Tag filter — <code>tagsOk(card)</code></h3>
+    <p><strong>OR logic:</strong> a card passes if it has <em>at least one</em> of the selected tags. Tags are stored on each card as a pipe-separated string in <code>data-tags</code>. Both AI-generated tags (from Claude) and GitHub topics are included.</p>
+    <pre>card.dataset.tags = "python|cli|llm|machine-learning|transformer"
+// Split on '|' to get the list for comparison</pre>
+
+    <h3>Min Stars filter — <code>starsOk(card)</code></h3>
+    <p>Compares <code>parseInt(card.dataset.stars)</code> against the dropdown value (0, 1000, 5000, 10000, 50000, 100000).</p>
+
+    <h3>Search filter — <code>searchOk(card)</code></h3>
+    <p>Case-insensitive substring match across: repo full_name, description text, AI summary text, and tags (pipe-separated string converted to spaces). Debounced 200ms to avoid filtering on every keystroke.</p>
+  </section>
+
+  <!-- ====================== CARD DATA ====================== -->
+  <section class="section" id="card-data">
+    <h2>Card Data Attributes</h2>
+    <p>Every <code>&lt;article class="repo-card"&gt;</code> element carries these HTML data attributes, which the JavaScript filters read directly. No additional API calls are needed at runtime.</p>
+
+    <table>
+      <thead><tr><th>Attribute</th><th>Type</th><th>Example</th><th>Used by</th></tr></thead>
+      <tbody>
+        <tr><td class="td-name">data-lang</td><td>string</td><td><code>"Python"</code></td><td>Language filter</td></tr>
+        <tr><td class="td-name">data-stars</td><td>integer string</td><td><code>"18432"</code></td><td>Min Stars filter, period filter denominator</td></tr>
+        <tr><td class="td-name">data-forks</td><td>integer string</td><td><code>"2101"</code></td><td>Sort by forks</td></tr>
+        <tr><td class="td-name">data-rank</td><td>integer string</td><td><code>"1"</code></td><td>Sort by trending (default)</td></tr>
+        <tr><td class="td-name">data-score</td><td>float string</td><td><code>"84.32"</code></td><td>Sort by trending</td></tr>
+        <tr><td class="td-name">data-name</td><td>string</td><td><code>"owner/repo"</code></td><td>Search filter</td></tr>
+        <tr><td class="td-name">data-tags</td><td>pipe-separated</td><td><code>"python|cli|llm"</code></td><td>Tag cloud filter, search filter</td></tr>
+        <tr><td class="td-name">data-stars7d</td><td>integer string or ""</td><td><code>"120"</code></td><td>Period filter (7d), delta badge</td></tr>
+        <tr><td class="td-name">data-stars24h</td><td>integer string or ""</td><td><code>"45"</code></td><td>Period filter (24h), delta badge</td></tr>
+        <tr><td class="td-name">data-stars30d</td><td>integer string or ""</td><td><code>"890"</code></td><td>Period filter (30d), delta badge</td></tr>
+      </tbody>
+    </table>
+
+    <p>Empty string (<code>""</code>) means no historical data is available for that window. The JS filters treat empty as "no data → show the repo".</p>
+  </section>
+
+  <!-- ====================== SORT LOGIC ====================== -->
+  <section class="section" id="sort-logic">
+    <h2>Sort Logic</h2>
+    <p>Sorting is applied after filtering. The DOM is re-ordered by moving card elements with <code>grid.appendChild()</code>, which places visible cards first (sorted by the selected key) and hidden cards at the end.</p>
+
+    <table>
+      <thead><tr><th>Sort option</th><th>Comparator</th><th>Notes</th></tr></thead>
+      <tbody>
+        <tr>
+          <td class="td-accent">Trending (default)</td>
+          <td><code>parseInt(a.dataset.rank) - parseInt(b.dataset.rank)</code></td>
+          <td>Lower rank number = higher position. Rank 1 = most trending by composite score.</td>
+        </tr>
+        <tr>
+          <td class="td-accent">Most Stars</td>
+          <td><code>parseInt(b.dataset.stars) - parseInt(a.dataset.stars)</code></td>
+          <td>Descending by total star count. A classic GitHub popularity sort.</td>
+        </tr>
+        <tr>
+          <td class="td-accent">Most Forks</td>
+          <td><code>parseInt(b.dataset.forks) - parseInt(a.dataset.forks)</code></td>
+          <td>Descending by fork count. Surfaces repos people are actively building on.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <p>The delta badge in each card footer updates dynamically when the period toggle changes via <code>updateDeltaBadges(period)</code>, which reads the appropriate <code>data-stars*</code> attribute and formats it as <code>+N 24h</code> / <code>+N 7d</code> / etc.</p>
+  </section>
+
+  <!-- ====================== GIT / GITHUB ====================== -->
+  <section class="section" id="git-github">
+    <h2>Git &amp; GitHub</h2>
+
+    <h3>What is and isn't committed</h3>
+    <div class="two-col">
+      <div class="card">
+        <div class="card-title" style="color:var(--green);">✓ Committed to GitHub</div>
+        <ul>
+          <li>All <code>*.py</code> source files</li>
+          <li><code>requirements.txt</code>, <code>requirements-dev.txt</code></li>
+          <li><code>README.md</code></li>
+          <li><code>.env.example</code>, <code>.gitignore</code></li>
+          <li><code>github-trending-task.xml</code></li>
+          <li><code>tests/*.py</code></li>
+          <li><code>docs/index.html</code> — updated daily</li>
+          <li><code>docs/about.html</code>, <code>docs/pipeline.html</code></li>
+        </ul>
+      </div>
+      <div class="card">
+        <div class="card-title" style="color:var(--red);">✗ Never committed (gitignored)</div>
+        <ul>
+          <li><code>.env</code> — contains API keys</li>
+          <li><code>data/trending.db</code> — SQLite database</li>
+          <li><code>data/*.json</code>, <code>data/*.tmp</code></li>
+          <li><code>data/Historical Data/*.csv</code></li>
+          <li><code>docs/data.json</code></li>
+          <li><code>logs/</code></li>
+          <li><code>.venv/</code></li>
+          <li><code>__pycache__/</code>, <code>*.pyc</code></li>
+          <li><code>.claude/</code></li>
+        </ul>
+      </div>
+    </div>
+
+    <h3>Branch protection on <code>master</code></h3>
+    <p>The <code>master</code> branch has protection rules enabled: <strong>force pushes are blocked</strong> and the <strong>branch cannot be deleted</strong>. Normal <code>git push</code> from the pipeline works fine — only destructive operations are prevented.</p>
+
+    <h3>Daily commit workflow</h3>
+    <pre># After pipeline completes, push the updated site:
+git add docs/index.html
+git commit -m "chore: update trending site YYYY-MM-DD"
+git push
+# Cloudflare Pages detects the push and deploys within ~60 seconds</pre>
+  </section>
+
+  <!-- ====================== CLOUDFLARE ====================== -->
+  <section class="section" id="cloudflare">
+    <h2>Cloudflare Pages</h2>
+
+    <h3>Project configuration</h3>
+    <table>
+      <thead><tr><th>Setting</th><th>Value</th></tr></thead>
+      <tbody>
+        <tr><td>Repository</td><td><code>github.com/AndrewGodlewsky/trendingrepos</code></td></tr>
+        <tr><td>Production branch</td><td><code>master</code></td></tr>
+        <tr><td>Build command</td><td><em>None</em> — HTML is pre-built locally</td></tr>
+        <tr><td>Build output directory</td><td><code>docs</code></td></tr>
+        <tr><td>Deploy trigger</td><td>Every push to <code>master</code></td></tr>
+        <tr><td>Deploy time</td><td>~60 seconds from push to live</td></tr>
+      </tbody>
+    </table>
+
+    <p>Cloudflare Pages serves only the <code>docs/</code> folder. It has read-only access to the GitHub repo and no knowledge of your local machine, database, or API keys.</p>
+  </section>
+
+  <!-- ====================== WHAT IS PUBLIC ====================== -->
+  <section class="section" id="what-is-public">
+    <h2>What Gets Published</h2>
+    <p>Only three files are visible on the public website:</p>
+
+    <table>
+      <thead><tr><th>URL path</th><th>File</th><th>Updated</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><code>/</code> or <code>/index.html</code></td>
+          <td><code>docs/index.html</code></td>
+          <td>Every daily pipeline run — contains 200 repo cards with all stats, summaries, and tags embedded as HTML.</td>
+        </tr>
+        <tr>
+          <td><code>/about.html</code></td>
+          <td><code>docs/about.html</code></td>
+          <td>Manually when pipeline behaviour changes (scoring, thresholds, etc.)</td>
+        </tr>
+        <tr>
+          <td><code>/pipeline.html</code></td>
+          <td><code>docs/pipeline.html</code></td>
+          <td>This file — updated manually.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="callout green">
+      <strong>Privacy:</strong> No API keys, no personal data, no database contents, and no server-side code are ever made public. The published site is entirely static HTML generated from sanitised repo metadata.
+    </div>
+
+    <h3>Site size breakdown</h3>
+    <table>
+      <thead><tr><th>Component</th><th>Approximate size</th></tr></thead>
+      <tbody>
+        <tr><td>200 repo cards (HTML)</td><td>~600 KB</td></tr>
+        <tr><td>Inline CSS</td><td>~25 KB</td></tr>
+        <tr><td>Inline JavaScript</td><td>~10 KB</td></tr>
+        <tr><td>Tag cloud pills (60 tags)</td><td>~5 KB</td></tr>
+        <tr><td>SVG icons (inlined)</td><td>~5 KB</td></tr>
+        <tr><td><strong>Total</strong></td><td><strong>~960 KB</strong></td></tr>
+      </tbody>
+    </table>
+
+    <p>The page has no external requests — no CDN, no fonts, no analytics, no tracking. Everything is inlined.</p>
+  </section>
+
+</main>
+
+<script>
+// Highlight active nav link based on scroll position
+(function () {
+  var links = document.querySelectorAll('.nav-link');
+  var sections = [];
+  links.forEach(function (link) {
+    var id = link.getAttribute('href').slice(1);
+    var el = document.getElementById(id);
+    if (el) sections.push({ id: id, el: el, link: link });
+  });
+
+  function onScroll() {
+    var scrollY = window.scrollY + 80;
+    var active = sections[0];
+    for (var i = 0; i < sections.length; i++) {
+      if (sections[i].el.offsetTop <= scrollY) active = sections[i];
+    }
+    links.forEach(function (l) { l.classList.remove('active'); });
+    if (active) active.link.classList.add('active');
+  }
+
+  window.addEventListener('scroll', onScroll, { passive: true });
+  onScroll();
+})();
+</script>
+</body>
+</html>
