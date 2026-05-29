@@ -198,7 +198,8 @@ def _build_card(repo: dict) -> str:
     if summary_text:
         summary_section = f'<p class="summary">{summary_text}</p>'
 
-    return f"""<article class="repo-card" data-lang="{lang_escaped}" data-stars7d="{stars_7d_attr}" data-rank="{rank}" data-name="{full_name}" data-score="{trending_score:.2f}">
+    tags_pipe = html.escape("|".join(all_tags))
+    return f"""<article class="repo-card" data-lang="{lang_escaped}" data-stars7d="{stars_7d_attr}" data-rank="{rank}" data-name="{full_name}" data-score="{trending_score:.2f}" data-tags="{tags_pipe}" data-stars="{stars}" data-forks="{forks}">
   <div class="card-header">
     <span class="rank-badge">#{rank}</span>
     <div class="card-title-row">
@@ -594,6 +595,120 @@ svg { vertical-align: middle; flex-shrink: 0; }
 ::-webkit-scrollbar-track { background: var(--bg); }
 ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
 ::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+
+/* ===== Filter bar second row (sort + min-stars) ===== */
+.filters-row2 {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  padding-top: 0.5rem;
+  border-top: 1px solid var(--border);
+  margin-top: 0.5rem;
+  width: 100%;
+}
+.filters-row2-label {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+/* ===== Tag Cloud Bar ===== */
+.tag-cloud-bar {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: 0.55rem 0;
+}
+.tag-cloud-inner {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+.tag-cloud-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.tag-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  flex: 1;
+}
+.tag-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.7rem;
+  font-weight: 500;
+  color: var(--text-muted);
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 0.18rem 0.55rem;
+  cursor: pointer;
+  transition: color var(--transition), border-color var(--transition), background var(--transition);
+  white-space: nowrap;
+  line-height: 1.5;
+  user-select: none;
+}
+.tag-pill:hover {
+  color: var(--accent);
+  border-color: var(--accent);
+  background: var(--accent-dim);
+}
+.tag-pill.active {
+  color: #fff;
+  background: var(--accent);
+  border-color: var(--accent);
+}
+.tag-pill.active:hover { background: #4a94f0; border-color: #4a94f0; }
+.tag-pill-count {
+  font-size: 0.62rem;
+  opacity: 0.65;
+  background: rgba(255,255,255,0.18);
+  border-radius: 10px;
+  padding: 0 0.28rem;
+  line-height: 1.4;
+}
+.tag-pill.active .tag-pill-count { opacity: 0.9; }
+.clear-tags-btn {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 0.18rem 0.55rem;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: color var(--transition), border-color var(--transition);
+  display: none;
+}
+.clear-tags-btn:hover { color: var(--red); border-color: var(--red); }
+
+/* ===== Clickable card tags ===== */
+.repo-card .tag {
+  cursor: pointer;
+  transition: color var(--transition), border-color var(--transition), background var(--transition);
+}
+.repo-card .tag:hover {
+  color: var(--accent);
+  border-color: var(--accent);
+  background: var(--accent-dim);
+}
+.repo-card .tag.tag-active {
+  color: #fff;
+  background: var(--accent);
+  border-color: var(--accent);
+}
 """
 
 
@@ -602,118 +717,224 @@ def _build_inline_js() -> str:
 (function () {
   'use strict';
 
-  var REPOS = [];
   var searchTimer = null;
-  var activeFilters = { lang: '', period: 'all', query: '' };
+  var activeFilters = {
+    lang:     '',
+    period:   'all',
+    query:    '',
+    tags:     new Set(),   // selected tags — OR logic
+    sort:     'trending',  // trending | stars | forks
+    minStars: 0
+  };
+
+  // ---------- utilities ----------
 
   function debounce(fn, ms) {
-    return function() {
-      var args = arguments;
+    return function () {
       clearTimeout(searchTimer);
-      searchTimer = setTimeout(function() { fn.apply(null, args); }, ms);
+      searchTimer = setTimeout(fn, ms);
     };
   }
 
   function stars7dNum(card) {
     var v = card.dataset.stars7d;
-    if (v === '' || v === undefined || v === null) return null;
-    return parseInt(v, 10);
+    return (v === '' || v == null) ? null : parseInt(v, 10);
   }
 
-  function periodMatch(card, period) {
-    if (period === 'all' || period === '30d') return true;
-    var v = stars7dNum(card);
-    if (v === null) return false;
-    if (period === '7d') return v > 0;
-    if (period === '24h') return v > 0;
-    return true;
+  function cardTagList(card) {
+    var v = card.dataset.tags || '';
+    return v ? v.split('|') : [];
   }
+
+  // ---------- per-filter predicates ----------
+
+  function periodOk(card) {
+    var p = activeFilters.period;
+    if (p === 'all' || p === '30d') return true;
+    var v = stars7dNum(card);
+    return v !== null && v > 0;
+  }
+
+  function tagsOk(card) {
+    if (activeFilters.tags.size === 0) return true;
+    var tl = cardTagList(card);
+    for (var i = 0; i < tl.length; i++) {
+      if (activeFilters.tags.has(tl[i])) return true;
+    }
+    return false;
+  }
+
+  function starsOk(card) {
+    if (!activeFilters.minStars) return true;
+    return parseInt(card.dataset.stars || '0', 10) >= activeFilters.minStars;
+  }
+
+  function searchOk(card) {
+    var q = activeFilters.query;
+    if (!q) return true;
+    var desc = card.querySelector('.description');
+    var summ = card.querySelector('.summary');
+    var text = [
+      card.dataset.name || '',
+      desc ? desc.textContent : '',
+      summ ? summ.textContent : '',
+      (card.dataset.tags || '').replace(/\\|/g, ' ')
+    ].join(' ').toLowerCase();
+    return text.indexOf(q) !== -1;
+  }
+
+  // ---------- sort comparator ----------
+
+  function compareCards(a, b) {
+    switch (activeFilters.sort) {
+      case 'stars':
+        return parseInt(b.dataset.stars || '0', 10) - parseInt(a.dataset.stars || '0', 10);
+      case 'forks':
+        return parseInt(b.dataset.forks || '0', 10) - parseInt(a.dataset.forks || '0', 10);
+      default: // trending — lower rank number = higher position
+        return parseInt(a.dataset.rank || '9999', 10) - parseInt(b.dataset.rank || '9999', 10);
+    }
+  }
+
+  // ---------- main render ----------
 
   function filterAndRender() {
     var grid = document.getElementById('repo-grid');
-    var cards = Array.prototype.slice.call(grid.querySelectorAll('.repo-card'));
-    var lang   = activeFilters.lang;
-    var period = activeFilters.period;
-    var query  = activeFilters.query.toLowerCase().trim();
+    var allCards = Array.prototype.slice.call(grid.querySelectorAll('.repo-card'));
+    var lang = activeFilters.lang;
+    var visibleCount = 0;
 
-    var visible = 0;
-    cards.forEach(function(card) {
-      // Language filter
-      if (lang && card.dataset.lang !== lang) {
-        card.style.display = 'none'; return;
-      }
-      // Period filter
-      if (!periodMatch(card, period)) {
-        card.style.display = 'none'; return;
-      }
-      // Search filter
-      if (query) {
-        var searchable = [
-          card.dataset.name || '',
-          card.querySelector('.description') ? card.querySelector('.description').textContent : '',
-          card.querySelector('.summary')     ? card.querySelector('.summary').textContent     : '',
-          card.querySelectorAll('.tag').length ? Array.prototype.map.call(card.querySelectorAll('.tag'), function(t){ return t.textContent; }).join(' ') : ''
-        ].join(' ').toLowerCase();
-        if (searchable.indexOf(query) === -1) {
-          card.style.display = 'none'; return;
-        }
-      }
-      card.style.display = '';
-      visible++;
+    // Tag-match each card; store result on element to avoid re-computing during sort
+    allCards.forEach(function (card) {
+      var ok = true;
+      if (lang && card.dataset.lang !== lang) ok = false;
+      if (ok && !periodOk(card))  ok = false;
+      if (ok && !tagsOk(card))    ok = false;
+      if (ok && !starsOk(card))   ok = false;
+      if (ok && !searchOk(card))  ok = false;
+      card._show = ok;
+      if (ok) visibleCount++;
     });
 
-    // Show/hide empty state
-    var existing = grid.querySelector('.empty-state');
-    if (visible === 0) {
-      if (!existing) {
+    // Sort: visible cards by sort key, hidden cards to the end
+    var ordered = allCards.slice().sort(function (a, b) {
+      if (a._show && !b._show) return -1;
+      if (!a._show && b._show) return 1;
+      if (!a._show && !b._show) return 0;
+      return compareCards(a, b);
+    });
+
+    // Re-order DOM and apply visibility in one pass
+    ordered.forEach(function (card) {
+      card.style.display = card._show ? '' : 'none';
+      grid.appendChild(card);
+    });
+
+    // Empty state
+    var emptyEl = grid.querySelector('.empty-state');
+    if (visibleCount === 0) {
+      if (!emptyEl) {
         var el = document.createElement('div');
         el.className = 'empty-state';
-        var h3 = document.createElement('h3');
-        h3.textContent = 'No repositories found';
-        var p = document.createElement('p');
-        p.textContent = 'Try adjusting your filters or search query.';
-        el.appendChild(h3);
-        el.appendChild(p);
+        el.innerHTML = '<h3>No repositories found</h3><p>Try adjusting your filters or search query.</p>';
         grid.appendChild(el);
       }
-    } else {
-      if (existing) existing.remove();
+    } else if (emptyEl) {
+      emptyEl.remove();
     }
 
-    // Update visible count
     var countEl = document.getElementById('filter-count');
-    if (countEl) countEl.textContent = 'Showing ' + visible + ' of ' + cards.length + ' repos';
+    if (countEl) countEl.textContent = 'Showing ' + visibleCount + ' of ' + allCards.length + ' repos';
   }
+
+  // ---------- tag toggle ----------
+
+  function syncTagPills() {
+    document.querySelectorAll('.tag-pill[data-tag]').forEach(function (pill) {
+      pill.classList.toggle('active', activeFilters.tags.has(pill.dataset.tag));
+    });
+    // Sync tag spans inside cards
+    document.querySelectorAll('.repo-card .tag').forEach(function (span) {
+      span.classList.toggle('tag-active', activeFilters.tags.has(span.textContent.trim()));
+    });
+    var clearBtn = document.getElementById('clear-tags');
+    if (clearBtn) clearBtn.style.display = activeFilters.tags.size > 0 ? '' : 'none';
+  }
+
+  function toggleTag(tag) {
+    if (activeFilters.tags.has(tag)) {
+      activeFilters.tags.delete(tag);
+    } else {
+      activeFilters.tags.add(tag);
+    }
+    syncTagPills();
+    filterAndRender();
+  }
+
+  function clearTags() {
+    activeFilters.tags.clear();
+    syncTagPills();
+    filterAndRender();
+  }
+
+  // ---------- init ----------
 
   function init() {
     var searchEl = document.getElementById('search-input');
     var langEl   = document.getElementById('lang-select');
+    var sortEl   = document.getElementById('sort-select');
+    var starsEl  = document.getElementById('stars-select');
+    var clearBtn = document.getElementById('clear-tags');
     var periods  = document.querySelectorAll('input[name="period"]');
 
     if (searchEl) {
-      searchEl.addEventListener('input', debounce(function() {
-        activeFilters.query = searchEl.value;
+      searchEl.addEventListener('input', debounce(function () {
+        activeFilters.query = searchEl.value.toLowerCase().trim();
         filterAndRender();
       }, 200));
     }
-
     if (langEl) {
-      langEl.addEventListener('change', function() {
+      langEl.addEventListener('change', function () {
         activeFilters.lang = langEl.value;
         filterAndRender();
       });
     }
+    if (sortEl) {
+      sortEl.addEventListener('change', function () {
+        activeFilters.sort = sortEl.value;
+        filterAndRender();
+      });
+    }
+    if (starsEl) {
+      starsEl.addEventListener('change', function () {
+        activeFilters.minStars = parseInt(starsEl.value, 10) || 0;
+        filterAndRender();
+      });
+    }
+    periods.forEach(function (radio) {
+      radio.addEventListener('change', function () {
+        if (radio.checked) { activeFilters.period = radio.value; filterAndRender(); }
+      });
+    });
+    if (clearBtn) {
+      clearBtn.addEventListener('click', clearTags);
+    }
 
-    periods.forEach(function(radio) {
-      radio.addEventListener('change', function() {
-        if (radio.checked) {
-          activeFilters.period = radio.value;
-          filterAndRender();
-        }
+    // Tag cloud pills
+    document.querySelectorAll('.tag-pill[data-tag]').forEach(function (pill) {
+      pill.addEventListener('click', function () { toggleTag(pill.dataset.tag); });
+    });
+
+    // Tags inside cards are also clickable
+    document.querySelectorAll('.repo-card .tag').forEach(function (span) {
+      span.title = 'Filter by “' + span.textContent.trim() + '”';
+      span.addEventListener('click', function () {
+        toggleTag(span.textContent.trim());
+        var cloud = document.getElementById('tag-cloud');
+        if (cloud) cloud.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
       });
     });
 
-    // Initial count
     filterAndRender();
   }
 
@@ -735,13 +956,21 @@ def _collect_unique_languages(repos: List[dict]) -> List[str]:
     return langs
 
 
-def _collect_top_tags(repos: List[dict], limit: int = 40) -> List[str]:
-    """Return tags sorted by frequency, capped to limit."""
+def _collect_top_tags(repos: List[dict], limit: int = 60) -> List[Tuple[str, int]]:
+    """Return (tag, count) tuples sorted by frequency, capped to limit.
+
+    Counts both AI-generated tags and GitHub topics so the cloud reflects
+    the full vocabulary across all repos.
+    """
     counter: Counter = Counter()
     for r in repos:
         for t in (r.get("tags") or []):
-            counter[t] += 1
-    return [t for t, _ in counter.most_common(limit)]
+            if t:
+                counter[t.lower()] += 1
+        for t in (r.get("topics") or []):
+            if t:
+                counter[t.lower()] += 1
+    return counter.most_common(limit)
 
 
 def _enrich_repos(repos: List[dict], summaries: Dict[str, Any]) -> List[dict]:
@@ -789,6 +1018,7 @@ def _render_html(
     title: str,
     repos: List[dict],
     unique_langs: List[str],
+    top_tags: List[Tuple[str, int]],
     generated_at: str,
 ) -> str:
     """Render the full index.html as a string."""
@@ -805,6 +1035,15 @@ def _render_html(
     repo_count = len(repos)
     css = _build_inline_css()
     js = _build_inline_js()
+
+    # Tag cloud pills HTML
+    tag_pills_html = "\n      ".join(
+        f'<button class="tag-pill" data-tag="{html.escape(tag)}" title="{count} repos">'
+        f'{html.escape(tag)}'
+        f'<span class="tag-pill-count">{count}</span>'
+        f'</button>'
+        for tag, count in top_tags
+    )
 
     # GitHub octocat logo inline
     logo_svg = (
@@ -872,9 +1111,35 @@ def _render_html(
       <input type="radio" name="period" id="period-all" value="all" checked>
       <label for="period-all">All</label>
     </div>
-    <span class="filter-count" id="filter-count">Showing {repo_count} of {repo_count} repos</span>
+    <div class="filters-row2">
+      <select id="sort-select" class="lang-select" aria-label="Sort repositories">
+        <option value="trending">Sort: Trending</option>
+        <option value="stars">Sort: Most Stars</option>
+        <option value="forks">Sort: Most Forks</option>
+      </select>
+      <select id="stars-select" class="lang-select" aria-label="Minimum stars">
+        <option value="0">Any stars</option>
+        <option value="1000">1k+ stars</option>
+        <option value="5000">5k+ stars</option>
+        <option value="10000">10k+ stars</option>
+        <option value="50000">50k+ stars</option>
+        <option value="100000">100k+ stars</option>
+      </select>
+      <span class="filter-count" id="filter-count">Showing {repo_count} of {repo_count} repos</span>
+    </div>
   </div>
 </nav>
+
+<!-- ===== Tag Cloud ===== -->
+<section class="tag-cloud-bar" id="tag-cloud" aria-label="Filter by tag">
+  <div class="tag-cloud-inner">
+    <span class="tag-cloud-label">Tags</span>
+    <div class="tag-pills" id="tag-pills">
+      {tag_pills_html}
+    </div>
+    <button class="clear-tags-btn" id="clear-tags" aria-label="Clear tag filters">&#x2715; Clear</button>
+  </div>
+</section>
 
 <!-- ===== Main Content ===== -->
 <main class="main-content" id="main">
@@ -957,6 +1222,9 @@ def generate(cfg: dict) -> int:
     unique_langs = _collect_unique_languages(enriched)
     logger.debug("Unique languages: %s", unique_langs)
 
+    top_tags = _collect_top_tags(enriched)
+    logger.debug("Top tags: %d unique tags collected", len(top_tags))
+
     # ------------------------------------------------------------------
     # Render and write docs/index.html
     # ------------------------------------------------------------------
@@ -965,6 +1233,7 @@ def generate(cfg: dict) -> int:
         title=title,
         repos=enriched,
         unique_langs=unique_langs,
+        top_tags=top_tags,
         generated_at=now_utc,
     )
     index_path = docs_dir / "index.html"

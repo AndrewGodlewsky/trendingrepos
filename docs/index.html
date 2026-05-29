@@ -373,6 +373,120 @@ svg { vertical-align: middle; flex-shrink: 0; }
 ::-webkit-scrollbar-track { background: var(--bg); }
 ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
 ::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+
+/* ===== Filter bar second row (sort + min-stars) ===== */
+.filters-row2 {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  padding-top: 0.5rem;
+  border-top: 1px solid var(--border);
+  margin-top: 0.5rem;
+  width: 100%;
+}
+.filters-row2-label {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+/* ===== Tag Cloud Bar ===== */
+.tag-cloud-bar {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: 0.55rem 0;
+}
+.tag-cloud-inner {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+.tag-cloud-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.tag-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  flex: 1;
+}
+.tag-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.7rem;
+  font-weight: 500;
+  color: var(--text-muted);
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 0.18rem 0.55rem;
+  cursor: pointer;
+  transition: color var(--transition), border-color var(--transition), background var(--transition);
+  white-space: nowrap;
+  line-height: 1.5;
+  user-select: none;
+}
+.tag-pill:hover {
+  color: var(--accent);
+  border-color: var(--accent);
+  background: var(--accent-dim);
+}
+.tag-pill.active {
+  color: #fff;
+  background: var(--accent);
+  border-color: var(--accent);
+}
+.tag-pill.active:hover { background: #4a94f0; border-color: #4a94f0; }
+.tag-pill-count {
+  font-size: 0.62rem;
+  opacity: 0.65;
+  background: rgba(255,255,255,0.18);
+  border-radius: 10px;
+  padding: 0 0.28rem;
+  line-height: 1.4;
+}
+.tag-pill.active .tag-pill-count { opacity: 0.9; }
+.clear-tags-btn {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 0.18rem 0.55rem;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: color var(--transition), border-color var(--transition);
+  display: none;
+}
+.clear-tags-btn:hover { color: var(--red); border-color: var(--red); }
+
+/* ===== Clickable card tags ===== */
+.repo-card .tag {
+  cursor: pointer;
+  transition: color var(--transition), border-color var(--transition), background var(--transition);
+}
+.repo-card .tag:hover {
+  color: var(--accent);
+  border-color: var(--accent);
+  background: var(--accent-dim);
+}
+.repo-card .tag.tag-active {
+  color: #fff;
+  background: var(--accent);
+  border-color: var(--accent);
+}
 </style>
 </head>
 <body>
@@ -385,7 +499,7 @@ svg { vertical-align: middle; flex-shrink: 0; }
       <span>GitHub Trending</span>
     </div>
     <div class="header-meta">
-      <span>Updated <time id="last-updated">2026-05-29 01:33</time> UTC</span>
+      <span>Updated <time id="last-updated">2026-05-29 03:46</time> UTC</span>
       <span class="repo-count-badge" id="repo-count">200 repos</span>
     </div>
   </div>
@@ -435,15 +549,100 @@ svg { vertical-align: middle; flex-shrink: 0; }
       <input type="radio" name="period" id="period-all" value="all" checked>
       <label for="period-all">All</label>
     </div>
-    <span class="filter-count" id="filter-count">Showing 200 of 200 repos</span>
+    <div class="filters-row2">
+      <select id="sort-select" class="lang-select" aria-label="Sort repositories">
+        <option value="trending">Sort: Trending</option>
+        <option value="stars">Sort: Most Stars</option>
+        <option value="forks">Sort: Most Forks</option>
+      </select>
+      <select id="stars-select" class="lang-select" aria-label="Minimum stars">
+        <option value="0">Any stars</option>
+        <option value="1000">1k+ stars</option>
+        <option value="5000">5k+ stars</option>
+        <option value="10000">10k+ stars</option>
+        <option value="50000">50k+ stars</option>
+        <option value="100000">100k+ stars</option>
+      </select>
+      <span class="filter-count" id="filter-count">Showing 200 of 200 repos</span>
+    </div>
   </div>
 </nav>
+
+<!-- ===== Tag Cloud ===== -->
+<section class="tag-cloud-bar" id="tag-cloud" aria-label="Filter by tag">
+  <div class="tag-cloud-inner">
+    <span class="tag-cloud-label">Tags</span>
+    <div class="tag-pills" id="tag-pills">
+      <button class="tag-pill" data-tag="python" title="65 repos">python<span class="tag-pill-count">65</span></button>
+      <button class="tag-pill" data-tag="typescript" title="58 repos">typescript<span class="tag-pill-count">58</span></button>
+      <button class="tag-pill" data-tag="llm" title="49 repos">llm<span class="tag-pill-count">49</span></button>
+      <button class="tag-pill" data-tag="ai" title="40 repos">ai<span class="tag-pill-count">40</span></button>
+      <button class="tag-pill" data-tag="ai-agents" title="40 repos">ai-agents<span class="tag-pill-count">40</span></button>
+      <button class="tag-pill" data-tag="javascript" title="40 repos">javascript<span class="tag-pill-count">40</span></button>
+      <button class="tag-pill" data-tag="open-source" title="34 repos">open-source<span class="tag-pill-count">34</span></button>
+      <button class="tag-pill" data-tag="developer-tools" title="30 repos">developer-tools<span class="tag-pill-count">30</span></button>
+      <button class="tag-pill" data-tag="claude" title="30 repos">claude<span class="tag-pill-count">30</span></button>
+      <button class="tag-pill" data-tag="rust" title="29 repos">rust<span class="tag-pill-count">29</span></button>
+      <button class="tag-pill" data-tag="claude-code" title="24 repos">claude-code<span class="tag-pill-count">24</span></button>
+      <button class="tag-pill" data-tag="cli" title="23 repos">cli<span class="tag-pill-count">23</span></button>
+      <button class="tag-pill" data-tag="awesome-list" title="21 repos">awesome-list<span class="tag-pill-count">21</span></button>
+      <button class="tag-pill" data-tag="go" title="20 repos">go<span class="tag-pill-count">20</span></button>
+      <button class="tag-pill" data-tag="react" title="18 repos">react<span class="tag-pill-count">18</span></button>
+      <button class="tag-pill" data-tag="ai-agent" title="18 repos">ai-agent<span class="tag-pill-count">18</span></button>
+      <button class="tag-pill" data-tag="education" title="17 repos">education<span class="tag-pill-count">17</span></button>
+      <button class="tag-pill" data-tag="automation" title="16 repos">automation<span class="tag-pill-count">16</span></button>
+      <button class="tag-pill" data-tag="rag" title="16 repos">rag<span class="tag-pill-count">16</span></button>
+      <button class="tag-pill" data-tag="openai" title="15 repos">openai<span class="tag-pill-count">15</span></button>
+      <button class="tag-pill" data-tag="machine-learning" title="15 repos">machine-learning<span class="tag-pill-count">15</span></button>
+      <button class="tag-pill" data-tag="self-hosted" title="14 repos">self-hosted<span class="tag-pill-count">14</span></button>
+      <button class="tag-pill" data-tag="mcp" title="14 repos">mcp<span class="tag-pill-count">14</span></button>
+      <button class="tag-pill" data-tag="java" title="14 repos">java<span class="tag-pill-count">14</span></button>
+      <button class="tag-pill" data-tag="nodejs" title="13 repos">nodejs<span class="tag-pill-count">13</span></button>
+      <button class="tag-pill" data-tag="hacktoberfest" title="13 repos">hacktoberfest<span class="tag-pill-count">13</span></button>
+      <button class="tag-pill" data-tag="cross-platform" title="13 repos">cross-platform<span class="tag-pill-count">13</span></button>
+      <button class="tag-pill" data-tag="chatgpt" title="12 repos">chatgpt<span class="tag-pill-count">12</span></button>
+      <button class="tag-pill" data-tag="framework" title="12 repos">framework<span class="tag-pill-count">12</span></button>
+      <button class="tag-pill" data-tag="openclaw" title="11 repos">openclaw<span class="tag-pill-count">11</span></button>
+      <button class="tag-pill" data-tag="anthropic" title="11 repos">anthropic<span class="tag-pill-count">11</span></button>
+      <button class="tag-pill" data-tag="deep-learning" title="11 repos">deep-learning<span class="tag-pill-count">11</span></button>
+      <button class="tag-pill" data-tag="windows" title="11 repos">windows<span class="tag-pill-count">11</span></button>
+      <button class="tag-pill" data-tag="agent" title="10 repos">agent<span class="tag-pill-count">10</span></button>
+      <button class="tag-pill" data-tag="codex" title="10 repos">codex<span class="tag-pill-count">10</span></button>
+      <button class="tag-pill" data-tag="gpt" title="10 repos">gpt<span class="tag-pill-count">10</span></button>
+      <button class="tag-pill" data-tag="awesome" title="9 repos">awesome<span class="tag-pill-count">9</span></button>
+      <button class="tag-pill" data-tag="skills" title="9 repos">skills<span class="tag-pill-count">9</span></button>
+      <button class="tag-pill" data-tag="workflow-automation" title="9 repos">workflow-automation<span class="tag-pill-count">9</span></button>
+      <button class="tag-pill" data-tag="prompt-engineering" title="8 repos">prompt-engineering<span class="tag-pill-count">8</span></button>
+      <button class="tag-pill" data-tag="gemini" title="8 repos">gemini<span class="tag-pill-count">8</span></button>
+      <button class="tag-pill" data-tag="linux" title="8 repos">linux<span class="tag-pill-count">8</span></button>
+      <button class="tag-pill" data-tag="terminal" title="8 repos">terminal<span class="tag-pill-count">8</span></button>
+      <button class="tag-pill" data-tag="nextjs" title="8 repos">nextjs<span class="tag-pill-count">8</span></button>
+      <button class="tag-pill" data-tag="agent-skills" title="7 repos">agent-skills<span class="tag-pill-count">7</span></button>
+      <button class="tag-pill" data-tag="desktop-app" title="7 repos">desktop-app<span class="tag-pill-count">7</span></button>
+      <button class="tag-pill" data-tag="generative-ai" title="7 repos">generative-ai<span class="tag-pill-count">7</span></button>
+      <button class="tag-pill" data-tag="api" title="7 repos">api<span class="tag-pill-count">7</span></button>
+      <button class="tag-pill" data-tag="agentic-ai" title="7 repos">agentic-ai<span class="tag-pill-count">7</span></button>
+      <button class="tag-pill" data-tag="macos" title="7 repos">macos<span class="tag-pill-count">7</span></button>
+      <button class="tag-pill" data-tag="deepseek" title="7 repos">deepseek<span class="tag-pill-count">7</span></button>
+      <button class="tag-pill" data-tag="pytorch" title="7 repos">pytorch<span class="tag-pill-count">7</span></button>
+      <button class="tag-pill" data-tag="monitoring" title="7 repos">monitoring<span class="tag-pill-count">7</span></button>
+      <button class="tag-pill" data-tag="compiler" title="7 repos">compiler<span class="tag-pill-count">7</span></button>
+      <button class="tag-pill" data-tag="data-visualization" title="7 repos">data-visualization<span class="tag-pill-count">7</span></button>
+      <button class="tag-pill" data-tag="docker" title="7 repos">docker<span class="tag-pill-count">7</span></button>
+      <button class="tag-pill" data-tag="productivity" title="6 repos">productivity<span class="tag-pill-count">6</span></button>
+      <button class="tag-pill" data-tag="design-system" title="6 repos">design-system<span class="tag-pill-count">6</span></button>
+      <button class="tag-pill" data-tag="ai-coding" title="6 repos">ai-coding<span class="tag-pill-count">6</span></button>
+      <button class="tag-pill" data-tag="curated-resources" title="6 repos">curated-resources<span class="tag-pill-count">6</span></button>
+    </div>
+    <button class="clear-tags-btn" id="clear-tags" aria-label="Clear tag filters">&#x2715; Clear</button>
+  </div>
+</section>
 
 <!-- ===== Main Content ===== -->
 <main class="main-content" id="main">
   <p class="section-title">Trending Repositories</p>
   <div class="repo-grid" id="repo-grid">
-<article class="repo-card" data-lang="Rust" data-stars7d="" data-rank="1" data-name="ultraworkers/claw-code" data-score="1661.87">
+<article class="repo-card" data-lang="Rust" data-stars7d="" data-rank="1" data-name="ultraworkers/claw-code" data-score="1661.87" data-tags="rust|ai-cli|agent|code-generation|llm" data-stars="192726" data-forks="109975">
   <div class="card-header">
     <span class="rank-badge">#1</span>
     <div class="card-title-row">
@@ -468,7 +667,7 @@ svg { vertical-align: middle; flex-shrink: 0; }
     </div>
   </div>
 </article>
-<article class="repo-card" data-lang="TypeScript" data-stars7d="" data-rank="2" data-name="openclaw/openclaw" data-score="1014.73">
+<article class="repo-card" data-lang="TypeScript" data-stars7d="" data-rank="2" data-name="openclaw/openclaw" data-score="1014.73" data-tags="ai-assistant|typescript|multi-channel|self-hosted|messaging-integration|ai|assistant|crustacean" data-stars="375310" data-forks="78299">
   <div class="card-header">
     <span class="rank-badge">#2</span>
     <div class="card-title-row">
@@ -493,7 +692,7 @@ svg { vertical-align: middle; flex-shrink: 0; }
     </div>
   </div>
 </article>
-<article class="repo-card" data-lang="TypeScript" data-stars7d="" data-rank="3" data-name="nexu-io/open-design" data-score="914.38">
+<article class="repo-card" data-lang="TypeScript" data-stars7d="" data-rank="3" data-name="nexu-io/open-design" data-score="914.38" data-tags="design-tool|ai-agents|open-source|typescript|figma-alternative|agent-skills|ai-design|byok" data-stars="54841" data-forks="6207">
   <div class="card-header">
     <span class="rank-badge">#3</span>
     <div class="card-title-row">
@@ -518,7 +717,7 @@ svg { vertical-align: middle; flex-shrink: 0; }
     </div>
   </div>
 </article>
-<article class="repo-card" data-lang="JavaScript" data-stars7d="" data-rank="4" data-name="affaan-m/ECC" data-score="759.16">
+<article class="repo-card" data-lang="JavaScript" data-stars7d="" data-rank="4" data-name="affaan-m/ECC" data-score="759.16" data-tags="ai-agents|developer-tools|llm|mcp|agent-orchestration|anthropic|claude|claude-code" data-stars="197285" data-forks="30340">
   <div class="card-header">
     <span class="rank-badge">#4</span>
     <div class="card-title-row">
@@ -543,7 +742,7 @@ svg { vertical-align: middle; flex-shrink: 0; }
     </div>
   </div>
 </article>
-<article class="repo-card" data-lang="" data-stars7d="" data-rank="5" data-name="VoltAgent/awesome-design-md" data-score="735.74">
+<article class="repo-card" data-lang="" data-stars7d="" data-rank="5" data-name="VoltAgent/awesome-design-md" data-score="735.74" data-tags="design-system|ai-agents|awesome-list|design-tokens|google-stitch|design-md|figma|landing-page" data-stars="85303" data-forks="10258">
   <div class="card-header">
     <span class="rank-badge">#5</span>
     <div class="card-title-row">
@@ -568,7 +767,7 @@ svg { vertical-align: middle; flex-shrink: 0; }
     </div>
   </div>
 </article>
-<article class="repo-card" data-lang="TypeScript" data-stars7d="" data-rank="6" data-name="garrytan/gstack" data-score="667.41">
+<article class="repo-card" data-lang="TypeScript" data-stars7d="" data-rank="6" data-name="garrytan/gstack" data-score="667.41" data-tags="ai-coding|claude-code|developer-tools|typescript|automation" data-stars="104057" data-forks="15513">
   <div class="card-header">
     <span class="rank-badge">#6</span>
     <div class="card-title-row">
@@ -593,7 +792,7 @@ svg { vertical-align: middle; flex-shrink: 0; }
     </div>
   </div>
 </article>
-<article class="repo-card" data-lang="" data-stars7d="" data-rank="7" data-name="sindresorhus/awesome" data-score="645.32">
+<article class="repo-card" data-lang="" data-stars7d="" data-rank="7" data-name="sindresorhus/awesome" data-score="645.32" data-tags="awesome-list|curated-resources|community-driven|reference|awesome|lists|resources|unicorns" data-stars="470933" data-forks="35210">
   <div class="card-header">
     <span class="rank-badge">#7</span>
     <div class="card-title-row">
@@ -618,7 +817,7 @@ svg { vertical-align: middle; flex-shrink: 0; }
     </div>
   </div>
 </article>
-<article class="repo-card" data-lang="JavaScript" data-stars7d="" data-rank="8" data-name="JuliusBrussee/caveman" data-score="611.79">
+<article class="repo-card" data-lang="JavaScript" data-stars7d="" data-rank="8" data-name="JuliusBrussee/caveman" data-score="611.79" data-tags="ai|prompt-engineering|token-optimization|claude|llm|anthropic|caveman|claude-code" data-stars="66041" data-forks="3723">
   <div class="card-header">
     <span class="rank-badge">#8</span>
     <div class="card-title-row">
@@ -643,7 +842,7 @@ svg { vertical-align: middle; flex-shrink: 0; }
     </div>
   </div>
 </article>
-<article class="repo-card" data-lang="TypeScript" data-stars7d="" data-rank="9" data-name="freeCodeCamp/freeCodeCamp" data-score="610.69">
+<article class="repo-card" data-lang="TypeScript" data-stars7d="" data-rank="9" data-name="freeCodeCamp/freeCodeCamp" data-score="610.69" data-tags="education|open-source|learn-to-code|curriculum|programming|careers|certification|community" data-stars="445539" data-forks="44724">
   <div class="card-header">
     <span class="rank-badge">#9</span>
     <div class="card-title-row">
@@ -668,7 +867,7 @@ svg { vertical-align: middle; flex-shrink: 0; }
     </div>
   </div>
 </article>
-<article class="repo-card" data-lang="Python" data-stars7d="" data-rank="10" data-name="public-apis/public-apis" data-score="599.91">
+<article class="repo-card" data-lang="Python" data-stars7d="" data-rank="10" data-name="public-apis/public-apis" data-score="599.91" data-tags="api-directory|public-apis|resource-list|developer-tools|open-source|api|apis|dataset" data-stars="437666" data-forks="47979">
   <div class="card-header">
     <span class="rank-badge">#10</span>
     <div class="card-title-row">
@@ -693,7 +892,7 @@ svg { vertical-align: middle; flex-shrink: 0; }
     </div>
   </div>
 </article>
-<article class="repo-card" data-lang="Python" data-stars7d="" data-rank="11" data-name="EbookFoundation/free-programming-books" data-score="533.39">
+<article class="repo-card" data-lang="Python" data-stars7d="" data-rank="11" data-name="EbookFoundation/free-programming-books" data-score="533.39" data-tags="free-resources|programming-books|education|multilingual|community-driven|books|hacktoberfest|list" data-stars="389108" data-forks="66353">
   <div class="card-header">
     <span class="rank-badge">#11</span>
     <div class="card-title-row">
@@ -718,7 +917,7 @@ svg { vertical-align: middle; flex-shrink: 0; }
     </div>
   </div>
 </article>
-<article class="repo-card" data-lang="Python" data-stars7d="" data-rank="12" data-name="safishamsi/graphify" data-score="506.33">
+<article class="repo-card" data-lang="Python" data-stars7d="" data-rank="12" data-name="safishamsi/graphify" data-score="506.33" data-tags="python|knowledge-graph|rag|ai-assistant|code-analysis|antigravity|claude-code|codex" data-stars="55656" data-forks="5847">
   <div class="card-header">
     <span class="rank-badge">#12</span>
     <div class="card-title-row">
@@ -743,7 +942,7 @@ svg { vertical-align: middle; flex-shrink: 0; }
     </div>
   </div>
 </article>
-<article class="repo-card" data-lang="Python" data-stars7d="" data-rank="13" data-name="MemPalace/mempalace" data-score="500.41">
+<article class="repo-card" data-lang="Python" data-stars7d="" data-rank="13" data-name="MemPalace/mempalace" data-score="500.41" data-tags="ai|memory-system|rag|python|llm|chromadb|mcp|memory" data-stars="53006" data-forks="6996">
   <div class="card-header">
     <span class="rank-badge">#13</span>
     <div class="card-title-row">
@@ -768,7 +967,7 @@ svg { vertical-align: middle; flex-shrink: 0; }
     </div>
   </div>
 </article>
-<article class="repo-card" data-lang="TypeScript" data-stars7d="" data-rank="14" data-name="nilbuild/developer-roadmap" data-score="487.55">
+<article class="repo-card" data-lang="TypeScript" data-stars7d="" data-rank="14" data-name="nilbuild/developer-roadmap" data-score="487.55" data-tags="developer-education|roadmap|career-development|typescript|interactive-learning|angular-roadmap|backend-roadmap|blockchain-roadmap" data-stars="355642" data-forks="44122">
   <div class="card-header">
     <span class="rank-badge">#14</span>
     <div class="card-title-row">
@@ -793,7 +992,7 @@ svg { vertical-align: middle; flex-shrink: 0; }
     </div>
   </div>
 </article>
-<article class="repo-card" data-lang="Shell" data-stars7d="" data-rank="15" data-name="mattpocock/skills" data-score="483.66">
+<article class="repo-card" data-lang="Shell" data-stars7d="" data-rank="15" data-name="mattpocock/skills" data-score="483.66" data-tags="ai-engineering|claude-skills|developer-tools|software-practices|productivity" data-stars="110192" data-forks="9669">
   <div class="card-header">
     <span class="rank-badge">#15</span>
     <div class="card-title-row">
@@ -818,7 +1017,7 @@ svg { vertical-align: middle; flex-shrink: 0; }
     </div>
   </div>
 </article>
-<article class="repo-card" data-lang="Shell" data-stars7d="" data-rank="16" data-name="obra/superpowers" data-score="457.25">
+<article class="repo-card" data-lang="Shell" data-stars7d="" data-rank="16" data-name="obra/superpowers" data-score="457.25" data-tags="ai-development|software-methodology|coding-agents|test-driven-development|developer-tools" data-stars="211086" data-forks="18791">
   <div class="card-header">
     <span class="rank-badge">#16</span>
     <div class="card-title-row">
@@ -843,7 +1042,7 @@ svg { vertical-align: middle; flex-shrink: 0; }
     </div>
   </div>
 </article>
-<article class="repo-card" data-lang="JavaScript" data-stars7d="" data-rank="17" data-name="santifer/career-ops" data-score="441.92">
+<article class="repo-card" data-lang="JavaScript" data-stars7d="" data-rank="17" data-name="santifer/career-ops" data-score="441.92" data-tags="job-search|ai-agent|automation|claude-code|career|anthropic|careerops|claude" data-stars="47688" data-forks="9920">
   <div class="card-header">
     <span class="rank-badge">#17</span>
     <div class="card-title-row">
@@ -868,7 +1067,7 @@ svg { vertical-align: middle; flex-shrink: 0; }
     </div>
   </div>
 </article>
-<article class="repo-card" data-lang="Python" data-stars7d="" data-rank="18" data-name="vinta/awesome-python" data-score="411.44">
+<article class="repo-card" data-lang="Python" data-stars7d="" data-rank="18" data-name="vinta/awesome-python" data-score="411.44" data-tags="awesome-list|python|curated-resources|developer-tools|awesome|collections|python-frameworks|python-libraries" data-stars="300084" data-forks="27986">
   <div class="card-header">
     <span class="rank-badge">#18</span>
     <div class="card-title-row">
@@ -893,7 +1092,7 @@ svg { vertical-align: middle; flex-shrink: 0; }
     </div>
   </div>
 </article>
-<article class="repo-card" data-lang="" data-stars7d="" data-rank="19" data-name="awesome-selfhosted/awesome-selfhosted" data-score="405.58">
+<article class="repo-card" data-lang="" data-stars7d="" data-rank="19" data-name="awesome-selfhosted/awesome-selfhosted" data-score="405.58" data-tags="awesome-list|self-hosted|free-software|open-source|privacy|awesome|cloud|hosting" data-stars="295810" data-forks="13752">
   <div class="card-header">
     <span class="rank-badge">#19</span>
     <div class="card-title-row">
@@ -918,7 +1117,7 @@ svg { vertical-align: middle; flex-shrink: 0; }
     </div>
   </div>
 </article>
-<article class="repo-card" data-lang="TypeScript" data-stars7d="" data-rank="20" data-name="paperclipai/paperclip" data-score="391.95">
+<article class="repo-card" data-lang="TypeScript" data-stars7d="" data-rank="20" data-name="paperclipai/paperclip" data-score="391.95" data-tags="typescript|ai-agents|orchestration|agent-management|open-source" data-stars="68137" data-forks="12564">
   <div class="card-header">
     <span class="rank-badge">#20</span>
     <div class="card-title-row">
@@ -943,7 +1142,7 @@ svg { vertical-align: middle; flex-shrink: 0; }
     </div>
   </div>
 </article>
-<article class="repo-card" data-lang="JavaScript" data-stars7d="" data-rank="21" data-name="facebook/react" data-score="336.42">
+<article class="repo-card" data-lang="JavaScript" data-stars7d="" data-rank="21" data-name="facebook/react" data-score="336.42" data-tags="javascript|react|ui-library|frontend|declarative|library|ui" data-stars="245310" data-forks="51135">
   <div class="card-header">
     <span class="rank-badge">#21</span>
     <div class="card-title-row">
@@ -968,7 +1167,7 @@ svg { vertical-align: middle; flex-shrink: 0; }
     </div>
   </div>
 </article>
-<article class="repo-card" data-lang="C" data-stars7d="" data-rank="22" data-name="torvalds/linux" data-score="321.91">
+<article class="repo-card" data-lang="C" data-stars7d="" data-rank="22" data-name="torvalds/linux" data-score="321.91" data-tags="linux|kernel|operating-system|c|low-level" data-stars="234712" data-forks="62590">
   <div class="card-header">
     <span class="rank-badge">#22</span>
     <div class="card-title-row">
@@ -993,7 +1192,7 @@ svg { vertical-align: middle; flex-shrink: 0; }
     </div>
   </div>
 </article>
-<article class="repo-card" data-lang="Python" data-stars7d="" data-rank="23" data-name="TheAlgorithms/Python" data-score="303.70">
+<article class="repo-card" data-lang="Python" data-stars7d="" data-rank="23" data-name="TheAlgorithms/Python" data-score="303.70" data-tags="python|algorithms|education|learning-resource|competitive-programming|algorithm|algorithm-competitions|algorithms-implemented" data-stars="221454" data-forks="50670">
   <div class="card-header">
     <span class="rank-badge">#23</span>
     <div class="card-title-row">
@@ -1018,7 +1217,7 @@ svg { vertical-align: middle; flex-shrink: 0; }
     </div>
   </div>
 </article>
-<article class="repo-card" data-lang="TypeScript" data-stars7d="" data-rank="24" data-name="chenglou/pretext" data-score="292.43">
+<article class="repo-card" data-lang="TypeScript" data-stars7d="" data-rank="24" data-name="chenglou/pretext" data-score="292.43" data-tags="typescript|text-layout|typography|canvas|unicode" data-stars="47906" data-forks="2674">
   <div class="card-header">
     <span class="rank-badge">#24</span>
     <div class="card-title-row">
@@ -1043,7 +1242,7 @@ svg { vertical-align: middle; flex-shrink: 0; }
     </div>
   </div>
 </article>
-<article class="repo-card" data-lang="TypeScript" data-stars7d="" data-rank="25" data-name="Lum1104/Understand-Anything" data-score="289.41">
+<article class="repo-card" data-lang="TypeScript" data-stars7d="" data-rank="25" data-name="Lum1104/Understand-Anything" data-score="289.41" data-tags="codebase-analysis|knowledge-graph|developer-tools|typescript|ai-powered|antigravity-skills|business-knowledge|claude-code" data-stars="42782" data-forks="3410">
   <div class="card-header">
     <span class="rank-badge">#25</span>
     <div class="card-title-row">
@@ -1068,7 +1267,7 @@ svg { vertical-align: middle; flex-shrink: 0; }
     </div>
   </div>
 </article>
-<article class="repo-card" data-lang="Python" data-stars7d="" data-rank="26" data-name="anthropics/skills" data-score="288.37">
+<article class="repo-card" data-lang="Python" data-stars7d="" data-rank="26" data-name="anthropics/skills" data-score="288.37" data-tags="ai-agent|claude|skills|python|prompt-engineering|agent-skills" data-stars="142845" data-forks="16865">
   <div class="card-header">
     <span class="rank-badge">#26</span>
     <div class="card-title-row">
@@ -1093,7 +1292,7 @@ svg { vertical-align: middle; flex-shrink: 0; }
     </div>
   </div>
 </article>
-<article class="repo-card" data-lang="Python" data-stars7d="" data-rank="27" data-name="NousResearch/hermes-agent" data-score="277.18">
+<article class="repo-card" data-lang="Python" data-stars7d="" data-rank="27" data-name="NousResearch/hermes-agent" data-score="277.18" data-tags="ai-agent|llm|python|research-tool|automation|ai|ai-agents|anthropic" data-stars="171629" data-forks="28788">
   <div class="card-header">
     <span class="rank-badge">#27</span>
     <div class="card-title-row">
@@ -1118,7 +1317,7 @@ svg { vertical-align: middle; flex-shrink: 0; }
     </div>
   </div>
 </article>
-<article class="repo-card" data-lang="JavaScript" data-stars7d="" data-rank="28" data-name="trekhleb/javascript-algorithms" data-score="268.88">
+<article class="repo-card" data-lang="JavaScript" data-stars7d="" data-rank="28" data-name="trekhleb/javascript-algorithms" data-score="268.88" data-tags="javascript|algorithms|data-structures|interview-preparation|education|algorithm|computer-science|interview" data-stars="196007" data-forks="31067">
   <div class="card-header">
     <span class="rank-badge">#28</span>
     <div class="card-title-row">
@@ -1143,7 +1342,7 @@ svg { vertical-align: middle; flex-shrink: 0; }
     </div>
   </div>
 </article>
-<article class="repo-card" data-lang="C++" data-stars7d="" data-rank="29" data-name="tensorflow/tensorflow" data-score="267.94">
+<article class="repo-card" data-lang="C++" data-stars7d="" data-rank="29" data-name="tensorflow/tensorflow" data-score="267.94" data-tags="machine-learning|deep-learning|python|neural-networks|tensorflow|deep-neural-networks|distributed|ml" data-stars="195300" data-forks="75319">
   <div class="card-header">
     <span class="rank-badge">#29</span>
     <div class="card-title-row">
@@ -1168,7 +1367,7 @@ svg { vertical-align: middle; flex-shrink: 0; }
     </div>
   </div>
 </article>
-<article class="repo-card" data-lang="TypeScript" data-stars7d="" data-rank="30" data-name="n8n-io/n8n" data-score="260.85">
+<article class="repo-card" data-lang="TypeScript" data-stars7d="" data-rank="30" data-name="n8n-io/n8n" data-score="260.85" data-tags="workflow-automation|low-code|integration-platform|typescript|self-hosted|ai|apis|automation" data-stars="190128" data-forks="58118">
   <div class="card-header">
     <span class="rank-badge">#30</span>
     <div class="card-title-row">
@@ -1193,7 +1392,7 @@ svg { vertical-align: middle; flex-shrink: 0; }
     </div>
   </div>
 </article>
-<article class="repo-card" data-lang="Shell" data-stars7d="" data-rank="31" data-name="ohmyzsh/ohmyzsh" data-score="257.09">
+<article class="repo-card" data-lang="Shell" data-stars7d="" data-rank="31" data-name="ohmyzsh/ohmyzsh" data-score="257.09" data-tags="shell|zsh|terminal|productivity|plugin-framework|cli|cli-app|oh-my-zsh" data-stars="187408" data-forks="26367">
   <div class="card-header">
     <span class="rank-badge">#31</span>
     <div class="card-title-row">
@@ -1218,7 +1417,7 @@ svg { vertical-align: middle; flex-shrink: 0; }
     </div>
   </div>
 </article>
-<article class="repo-card" data-lang="TypeScript" data-stars7d="" data-rank="32" data-name="microsoft/vscode" data-score="254.45">
+<article class="repo-card" data-lang="TypeScript" data-stars7d="" data-rank="32" data-name="microsoft/vscode" data-score="254.45" data-tags="code-editor|typescript|electron|open-source|ide|editor|microsoft|visual-studio-code" data-stars="185484" data-forks="40204">
   <div class="card-header">
     <span class="rank-badge">#32</span>
     <div class="card-title-row">
@@ -1243,7 +1442,7 @@ svg { vertical-align: middle; flex-shrink: 0; }
     </div>
   </div>
 </article>
-<article class="repo-card" data-lang="Python" data-stars7d="" data-rank="33" data-name="HKUDS/CLI-Anything" data-score="253.98">
+<article class="repo-card" data-lang="Python" data-stars7d="" data-rank="33" data-name="HKUDS/CLI-Anything" data-score="253.98" data-tags="ai-agents|cli-framework|automation|python|agent-native" data-stars="41091" data-forks="3883">
   <div class="card-header">
     <span class="rank-badge">#33</span>
     <div class="card-title-row">
@@ -1268,7 +1467,7 @@ svg { vertical-align: middle; flex-shrink: 0; }
     </div>
   </div>
 </article>
-<article class="repo-card" data-lang="Python" data-stars7d="" data-rank="34" data-name="Significant-Gravitas/AutoGPT" data-score="253.29">
+<article class="repo-card" data-lang="Python" data-stars7d="" data-rank="34" data-name="Significant-Gravitas/AutoGPT" data-score="253.29" data-tags="agentic-ai|autonomous-agents|llm|python|workflow-automation|agents|ai|artificial-intelligence" data-stars="184616" data-forks="46208">
   <div class="card-header">
     <span class="rank-badge">#34</span>
     <div class="card-title-row">
@@ -1293,7 +1492,7 @@ svg { vertical-align: middle; flex-shrink: 0; }
     </div>
   </div>
 </article>
-<article class="repo-card" data-lang="TypeScript" data-stars7d="" data-rank="35" data-name="Gitlawb/openclaude" data-score="245.96">
+<article class="repo-card" data-lang="TypeScript" data-stars7d="" data-rank="35" data-name="Gitlawb/openclaude" data-score="245.96" data-tags="ai-agent|cli|coding|typescript|llm|ai|ai-tools" data-stars="27995" data-forks="8644">
   <div class="card-header">
     <span class="rank-badge">#35</span>
     <div class="card-title-row">
@@ -1318,7 +1517,7 @@ svg { vertical-align: middle; flex-shrink: 0; }
     </div>
   </div>
 </article>
-<article class="repo-card" data-lang="Dart" data-stars7d="" data-rank="36" data-name="flutter/flutter" data-score="242.21">
+<article class="repo-card" data-lang="Dart" data-stars7d="" data-rank="36" data-name="flutter/flutter" data-score="242.21" data-tags="flutter|cross-platform|mobile-development|dart|app-framework|android|dart-platform|desktop" data-stars="176549" data-forks="30415">
   <div class="card-header">
     <span class="rank-badge">#36</span>
     <div class="card-title-row">
@@ -1343,7 +1542,7 @@ svg { vertical-align: middle; flex-shrink: 0; }
     </div>
   </div>
 </article>
-<article class="repo-card" data-lang="Batchfile" data-stars7d="" data-rank="37" data-name="massgravel/Microsoft-Activation-Scripts" data-score="242.15">
+<article class="repo-card" data-lang="Batchfile" data-stars7d="" data-rank="37" data-name="massgravel/Microsoft-Activation-Scripts" data-score="242.15" data-tags="windows-activator|office-activation|kms|batch-script|powershell|activator|hwid|kms38" data-stars="176607" data-forks="16958">
   <div class="card-header">
     <span class="rank-badge">#37</span>
     <div class="card-title-row">
@@ -1368,7 +1567,7 @@ svg { vertical-align: middle; flex-shrink: 0; }
     </div>
   </div>
 </article>
-<article class="repo-card" data-lang="MDX" data-stars7d="" data-rank="38" data-name="twbs/bootstrap" data-score="239.15">
+<article class="repo-card" data-lang="MDX" data-stars7d="" data-rank="38" data-name="twbs/bootstrap" data-score="239.15" data-tags="css-framework|bootstrap|responsive-design|front-end|javascript|css|html|sass" data-stars="174278" data-forks="78853">
   <div class="card-header">
     <span class="rank-badge">#38</span>
     <div class="card-title-row">
@@ -1393,7 +1592,7 @@ svg { vertical-align: middle; flex-shrink: 0; }
     </div>
   </div>
 </article>
-<article class="repo-card" data-lang="" data-stars7d="" data-rank="39" data-name="github/gitignore" data-score="238.92">
+<article class="repo-card" data-lang="" data-stars7d="" data-rank="39" data-name="github/gitignore" data-score="238.92" data-tags="git|gitignore|templates|developer-tools|open-source" data-stars="174136" data-forks="82470">
   <div class="card-header">
     <span class="rank-badge">#39</span>
     <div class="card-title-row">
@@ -1418,7 +1617,7 @@ svg { vertical-align: middle; flex-shrink: 0; }
     </div>
   </div>
 </article>
-<article class="repo-card" data-lang="Go" data-stars7d="" data-rank="40" data-name="avelino/awesome-go" data-score="238.58">
+<article class="repo-card" data-lang="Go" data-stars7d="" data-rank="40" data-name="avelino/awesome-go" data-score="238.58" data-tags="go|awesome-list|curated-resources|golang-libraries|developer-tools|awesome|golang|golang-library" data-stars="173900" data-forks="13264">
   <div class="card-header">
     <span class="rank-badge">#40</span>
     <div class="card-title-row">
@@ -1443,7 +1642,7 @@ svg { vertical-align: middle; flex-shrink: 0; }
     </div>
   </div>
 </article>
-<article class="repo-card" data-lang="Go" data-stars7d="" data-rank="41" data-name="ollama/ollama" data-score="236.71">
+<article class="repo-card" data-lang="Go" data-stars7d="" data-rank="41" data-name="ollama/ollama" data-score="236.71" data-tags="llm|go|ai|local-models|open-source|deepseek|gemma|gemma3" data-stars="172536" data-forks="16318">
   <div class="card-header">
     <span class="rank-badge">#41</span>
     <div class="card-title-row">
@@ -1468,7 +1667,7 @@ svg { vertical-align: middle; flex-shrink: 0; }
     </div>
   </div>
 </article>
-<article class="repo-card" data-lang="Shell" data-stars7d="" data-rank="42" data-name="addyosmani/agent-skills" data-score="229.32">
+<article class="repo-card" data-lang="Shell" data-stars7d="" data-rank="42" data-name="addyosmani/agent-skills" data-score="229.32" data-tags="ai-agents|engineering-workflows|development-tools|best-practices|prompt-engineering|agent-skills|antigravity|antigravity-ide" data-stars="46706" data-forks="5180">
   <div class="card-header">
     <span class="rank-badge">#42</span>
     <div class="card-title-row">
@@ -1493,7 +1692,7 @@ svg { vertical-align: middle; flex-shrink: 0; }
     </div>
   </div>
 </article>
-<article class="repo-card" data-lang="TypeScript" data-stars7d="" data-rank="43" data-name="anomalyco/opencode" data-score="228.68">
+<article class="repo-card" data-lang="TypeScript" data-stars7d="" data-rank="43" data-name="anomalyco/opencode" data-score="228.68" data-tags="ai-agent|code-generation|developer-tools|typescript|open-source" data-stars="166675" data-forks="19849">
   <div class="card-header">
     <span class="rank-badge">#43</span>
     <div class="card-title-row">
@@ -1518,7 +1717,7 @@ svg { vertical-align: middle; flex-shrink: 0; }
     </div>
   </div>
 </article>
-<article class="repo-card" data-lang="Python" data-stars7d="" data-rank="44" data-name="yt-dlp/yt-dlp" data-score="228.23">
+<article class="repo-card" data-lang="Python" data-stars7d="" data-rank="44" data-name="yt-dlp/yt-dlp" data-score="228.23" data-tags="video-downloader|cli-tool|python|youtube-dl|cli|downloader|sponsorblock|youtube-downloader" data-stars="166362" data-forks="13988">
   <div class="card-header">
     <span class="rank-badge">#44</span>
     <div class="card-title-row">
@@ -1543,7 +1742,7 @@ svg { vertical-align: middle; flex-shrink: 0; }
     </div>
   </div>
 </article>
-<article class="repo-card" data-lang="HTML" data-stars7d="" data-rank="45" data-name="f/prompts.chat" data-score="223.63">
+<article class="repo-card" data-lang="HTML" data-stars7d="" data-rank="45" data-name="f/prompts.chat" data-score="223.63" data-tags="ai|artificial-intelligence|awesome-list|chatgpt|chatgpt-prompts|claude|gemini|gpt" data-stars="162978" data-forks="21191">
   <div class="card-header">
     <span class="rank-badge">#45</span>
     <div class="card-title-row">
@@ -1568,7 +1767,7 @@ svg { vertical-align: middle; flex-shrink: 0; }
     </div>
   </div>
 </article>
-<article class="repo-card" data-lang="Rust" data-stars7d="" data-rank="46" data-name="rtk-ai/rtk" data-score="221.72">
+<article class="repo-card" data-lang="Rust" data-stars7d="" data-rank="46" data-name="rtk-ai/rtk" data-score="221.72" data-tags="cli-tool|llm-optimization|rust|developer-tools|ai-coding|agentic-coding|anthropic|claude-code" data-stars="55784" data-forks="3408">
   <div class="card-header">
     <span class="rank-badge">#46</span>
     <div class="card-title-row">
@@ -1593,7 +1792,7 @@ svg { vertical-align: middle; flex-shrink: 0; }
     </div>
   </div>
 </article>
-<article class="repo-card" data-lang="Python" data-stars7d="" data-rank="47" data-name="huggingface/transformers" data-score="220.96">
+<article class="repo-card" data-lang="Python" data-stars7d="" data-rank="47" data-name="huggingface/transformers" data-score="220.96" data-tags="python|machine-learning|transformers|nlp|deep-learning|audio|deepseek|gemma" data-stars="161027" data-forks="33341">
   <div class="card-header">
     <span class="rank-badge">#47</span>
     <div class="card-title-row">
@@ -1618,7 +1817,7 @@ svg { vertical-align: middle; flex-shrink: 0; }
     </div>
   </div>
 </article>
-<article class="repo-card" data-lang="Python" data-stars7d="" data-rank="48" data-name="521xueweihan/HelloGitHub" data-score="218.36">
+<article class="repo-card" data-lang="Python" data-stars7d="" data-rank="48" data-name="521xueweihan/HelloGitHub" data-score="218.36" data-tags="awesome-list|github|open-source|curated-resources|newsletter|awesome|hellogithub|python" data-stars="159138" data-forks="12064">
   <div class="card-header">
     <span class="rank-badge">#48</span>
     <div class="card-title-row">
@@ -1643,7 +1842,7 @@ svg { vertical-align: middle; flex-shrink: 0; }
     </div>
   </div>
 </article>
-<article class="repo-card" data-lang="JavaScript" data-stars7d="" data-rank="49" data-name="Snailclimb/JavaGuide" data-score="214.01">
+<article class="repo-card" data-lang="JavaScript" data-stars7d="" data-rank="49" data-name="Snailclimb/JavaGuide" data-score="214.01" data-tags="java|interview-guide|backend|learning-resource|agent|ai|context-engineering|deepseek" data-stars="155937" data-forks="46144">
   <div class="card-header">
     <span class="rank-badge">#49</span>
     <div class="card-title-row">
@@ -1668,7 +1867,7 @@ svg { vertical-align: middle; flex-shrink: 0; }
     </div>
   </div>
 </article>
-<article class="repo-card" data-lang="Python" data-stars7d="" data-rank="50" data-name="langflow-ai/langflow" data-score="204.28">
+<article class="repo-card" data-lang="Python" data-stars7d="" data-rank="50" data-name="langflow-ai/langflow" data-score="204.28" data-tags="python|ai-agents|llm|workflow-automation|low-code-platform|agents|chatgpt|generative-ai" data-stars="148856" data-forks="9137">
   <div class="card-header">
     <span class="rank-badge">#50</span>
     <div class="card-title-row">
@@ -1693,7 +1892,7 @@ svg { vertical-align: middle; flex-shrink: 0; }
     </div>
   </div>
 </article>
-<article class="repo-card" data-lang="" data-stars7d="" data-rank="51" data-name="VoltAgent/awesome-openclaw-skills" data-score="201.44">
+<article class="repo-card" data-lang="" data-stars7d="" data-rank="51" data-name="VoltAgent/awesome-openclaw-skills" data-score="201.44" data-tags="awesome-list|ai-agents|skills-registry|openclaw|community-tools|agent-skills|awesome|awesome-lists" data-stars="49465" data-forks="4834">
   <div class="card-header">
     <span class="rank-badge">#51</span>
     <div class="card-title-row">
@@ -1718,7 +1917,7 @@ svg { vertical-align: middle; flex-shrink: 0; }
     </div>
   </div>
 </article>
-<article class="repo-card" data-lang="TypeScript" data-stars7d="" data-rank="52" data-name="koala73/worldmonitor" data-score="196.99">
+<article class="repo-card" data-lang="TypeScript" data-stars7d="" data-rank="52" data-name="koala73/worldmonitor" data-score="196.99" data-tags="intelligence-dashboard|ai-powered|geopolitical-monitoring|typescript|open-source|ai|dashboard|geopolitics" data-stars="55054" data-forks="8860">
   <div class="card-header">
     <span class="rank-badge">#52</span>
     <div class="card-title-row">
@@ -1743,7 +1942,7 @@ svg { vertical-align: middle; flex-shrink: 0; }
     </div>
   </div>
 </article>
-<article class="repo-card" data-lang="TypeScript" data-stars7d="" data-rank="53" data-name="langgenius/dify" data-score="196.27">
+<article class="repo-card" data-lang="TypeScript" data-stars7d="" data-rank="53" data-name="langgenius/dify" data-score="196.27" data-tags="llm|agentic-ai|workflow-automation|rag|typescript|agent|agentic-framework|agentic-workflow" data-stars="143006" data-forks="22498">
   <div class="card-header">
     <span class="rank-badge">#53</span>
     <div class="card-title-row">
@@ -1768,7 +1967,7 @@ svg { vertical-align: middle; flex-shrink: 0; }
     </div>
   </div>
 </article>
-<article class="repo-card" data-lang="C" data-stars7d="" data-rank="54" data-name="Genymobile/scrcpy" data-score="195.69">
+<article class="repo-card" data-lang="C" data-stars7d="" data-rank="54" data-name="Genymobile/scrcpy" data-score="195.69" data-tags="android|screen-mirroring|desktop-tool|c|ffmpeg|libav|mirroring|recording" data-stars="142598" data-forks="13157">
   <div class="card-header">
     <span class="rank-badge">#54</span>
     <div class="card-title-row">
@@ -1793,7 +1992,7 @@ svg { vertical-align: middle; flex-shrink: 0; }
     </div>
   </div>
 </article>
-<article class="repo-card" data-lang="JavaScript" data-stars7d="" data-rank="55" data-name="gsd-build/get-shit-done" data-score="193.57">
+<article class="repo-card" data-lang="JavaScript" data-stars7d="" data-rank="55" data-name="gsd-build/get-shit-done" data-score="193.57" data-tags="claude-code|ai-development|meta-prompting|context-engineering|javascript|spec-driven-development" data-stars="63761" data-forks="5425">
   <div class="card-header">
     <span class="rank-badge">#55</span>
     <div class="card-title-row">
@@ -1818,7 +2017,7 @@ svg { vertical-align: middle; flex-shrink: 0; }
     </div>
   </div>
 </article>
-<article class="repo-card" data-lang="JavaScript" data-stars7d="" data-rank="56" data-name="vercel/next.js" data-score="191.61">
+<article class="repo-card" data-lang="JavaScript" data-stars7d="" data-rank="56" data-name="vercel/next.js" data-score="191.61" data-tags="blog|browser|compiler|components|hybrid|nextjs|node|react" data-stars="139597" data-forks="31149">
   <div class="card-header">
     <span class="rank-badge">#56</span>
     <div class="card-title-row">
@@ -1843,7 +2042,7 @@ svg { vertical-align: middle; flex-shrink: 0; }
     </div>
   </div>
 </article>
-<article class="repo-card" data-lang="Python" data-stars7d="" data-rank="57" data-name="github/spec-kit" data-score="191.10">
+<article class="repo-card" data-lang="Python" data-stars7d="" data-rank="57" data-name="github/spec-kit" data-score="191.10" data-tags="python|ai-development|spec-driven-development|cli-tool|developer-productivity|ai|copilot|development" data-stars="106811" data-forks="9455">
   <div class="card-header">
     <span class="rank-badge">#57</span>
     <div class="card-title-row">
@@ -1868,7 +2067,7 @@ svg { vertical-align: middle; flex-shrink: 0; }
     </div>
   </div>
 </article>
-<article class="repo-card" data-lang="Python" data-stars7d="" data-rank="58" data-name="open-webui/open-webui" data-score="190.89">
+<article class="repo-card" data-lang="Python" data-stars7d="" data-rank="58" data-name="open-webui/open-webui" data-score="190.89" data-tags="ai|llm|webui|self-hosted|rag|llm-ui|llm-webui|llms" data-stars="139077" data-forks="19934">
   <div class="card-header">
     <span class="rank-badge">#58</span>
     <div class="card-title-row">
@@ -1893,7 +2092,7 @@ svg { vertical-align: middle; flex-shrink: 0; }
     </div>
   </div>
 </article>
-<article class="repo-card" data-lang="" data-stars7d="" data-rank="59" data-name="x1xhlol/system-prompts-and-models-of-ai-tools" data-score="190.06">
+<article class="repo-card" data-lang="" data-stars7d="" data-rank="59" data-name="x1xhlol/system-prompts-and-models-of-ai-tools" data-score="190.06" data-tags="ai|system-prompts|ai-tools|open-source|reverse-engineering|bolt|cluely|copilot" data-stars="138487" data-forks="34489">
   <div class="card-header">
     <span class="rank-badge">#59</span>
     <div class="card-title-row">
@@ -1918,7 +2117,7 @@ svg { vertical-align: middle; flex-shrink: 0; }
     </div>
   </div>
 </article>
-<article class="repo-card" data-lang="Python" data-stars7d="" data-rank="60" data-name="langchain-ai/langchain" data-score="189.27">
+<article class="repo-card" data-lang="Python" data-stars7d="" data-rank="60" data-name="langchain-ai/langchain" data-score="189.27" data-tags="llm-framework|ai-agents|python|generative-ai|open-source|agents|ai|anthropic" data-stars="137896" data-forks="22834">
   <div class="card-header">
     <span class="rank-badge">#60</span>
     <div class="card-title-row">
@@ -1943,7 +2142,7 @@ svg { vertical-align: middle; flex-shrink: 0; }
     </div>
   </div>
 </article>
-<article class="repo-card" data-lang="Python" data-stars7d="" data-rank="61" data-name="HKUDS/nanobot" data-score="187.12">
+<article class="repo-card" data-lang="Python" data-stars7d="" data-rank="61" data-name="HKUDS/nanobot" data-score="187.12" data-tags="ai-agent|python|llm|chatbot|open-source|ai|ai-agents|anthropic" data-stars="43326" data-forks="7644">
   <div class="card-header">
     <span class="rank-badge">#61</span>
     <div class="card-title-row">
@@ -1968,7 +2167,7 @@ svg { vertical-align: middle; flex-shrink: 0; }
     </div>
   </div>
 </article>
-<article class="repo-card" data-lang="Go" data-stars7d="" data-rank="62" data-name="golang/go" data-score="184.04">
+<article class="repo-card" data-lang="Go" data-stars7d="" data-rank="62" data-name="golang/go" data-score="184.04" data-tags="go|programming-language|compiler|open-source|golang|language" data-stars="134090" data-forks="19074">
   <div class="card-header">
     <span class="rank-badge">#62</span>
     <div class="card-title-row">
@@ -1993,7 +2192,7 @@ svg { vertical-align: middle; flex-shrink: 0; }
     </div>
   </div>
 </article>
-<article class="repo-card" data-lang="C#" data-stars7d="" data-rank="63" data-name="microsoft/PowerToys" data-score="183.36">
+<article class="repo-card" data-lang="C#" data-stars7d="" data-rank="63" data-name="microsoft/PowerToys" data-score="183.36" data-tags="windows-utilities|productivity-tools|csharp|desktop-application|open-source|advanced-paste|color-picker|command-palette" data-stars="133606" data-forks="8017">
   <div class="card-header">
     <span class="rank-badge">#63</span>
     <div class="card-title-row">
@@ -2018,7 +2217,7 @@ svg { vertical-align: middle; flex-shrink: 0; }
     </div>
   </div>
 </article>
-<article class="repo-card" data-lang="JavaScript" data-stars7d="" data-rank="64" data-name="Chalarangelo/30-seconds-of-code" data-score="175.54">
+<article class="repo-card" data-lang="JavaScript" data-stars7d="" data-rank="64" data-name="Chalarangelo/30-seconds-of-code" data-score="175.54" data-tags="javascript|learning-resources|code-snippets|education|web-development|astro|awesome-list|css" data-stars="127949" data-forks="12485">
   <div class="card-header">
     <span class="rank-badge">#64</span>
     <div class="card-title-row">
@@ -2043,7 +2242,7 @@ svg { vertical-align: middle; flex-shrink: 0; }
     </div>
   </div>
 </article>
-<article class="repo-card" data-lang="Python" data-stars7d="" data-rank="65" data-name="microsoft/markitdown" data-score="175.35">
+<article class="repo-card" data-lang="Python" data-stars7d="" data-rank="65" data-name="microsoft/markitdown" data-score="175.35" data-tags="python|markdown|document-conversion|llm|file-processing|autogen|autogen-extension|langchain" data-stars="127751" data-forks="8743">
   <div class="card-header">
     <span class="rank-badge">#65</span>
     <div class="card-title-row">
@@ -2068,7 +2267,7 @@ svg { vertical-align: middle; flex-shrink: 0; }
     </div>
   </div>
 </article>
-<article class="repo-card" data-lang="Python" data-stars7d="" data-rank="66" data-name="anthropics/claude-code" data-score="174.81">
+<article class="repo-card" data-lang="Python" data-stars7d="" data-rank="66" data-name="anthropics/claude-code" data-score="174.81" data-tags="ai-coding-assistant|developer-tools|terminal|python|plugin-ecosystem" data-stars="127353" data-forks="20869">
   <div class="card-header">
     <span class="rank-badge">#66</span>
     <div class="card-title-row">
@@ -2093,7 +2292,7 @@ svg { vertical-align: middle; flex-shrink: 0; }
     </div>
   </div>
 </article>
-<article class="repo-card" data-lang="C++" data-stars7d="" data-rank="67" data-name="facebook/react-native" data-score="172.87">
+<article class="repo-card" data-lang="C++" data-stars7d="" data-rank="67" data-name="facebook/react-native" data-score="172.87" data-tags="react-native|mobile-development|cross-platform|framework|javascript|android|app-framework|ios" data-stars="125919" data-forks="25171">
   <div class="card-header">
     <span class="rank-badge">#67</span>
     <div class="card-title-row">
@@ -2118,7 +2317,7 @@ svg { vertical-align: middle; flex-shrink: 0; }
     </div>
   </div>
 </article>
-<article class="repo-card" data-lang="TypeScript" data-stars7d="" data-rank="68" data-name="firecrawl/firecrawl" data-score="172.66">
+<article class="repo-card" data-lang="TypeScript" data-stars7d="" data-rank="68" data-name="firecrawl/firecrawl" data-score="172.66" data-tags="web-scraper|api|ai-agents|data-extraction|typescript|ai|ai-crawler|ai-scraping" data-stars="125781" data-forks="7555">
   <div class="card-header">
     <span class="rank-badge">#68</span>
     <div class="card-title-row">
@@ -2143,7 +2342,7 @@ svg { vertical-align: middle; flex-shrink: 0; }
     </div>
   </div>
 </article>
-<article class="repo-card" data-lang="Python" data-stars7d="" data-rank="69" data-name="666ghj/MiroFish" data-score="172.58">
+<article class="repo-card" data-lang="Python" data-stars7d="" data-rank="69" data-name="666ghj/MiroFish" data-score="172.58" data-tags="swarm-intelligence|multi-agent-simulation|prediction-engine|llms|python|agent-memory|financial-forecasting|future-prediction" data-stars="63038" data-forks="9870">
   <div class="card-header">
     <span class="rank-badge">#69</span>
     <div class="card-title-row">
@@ -2168,7 +2367,7 @@ svg { vertical-align: middle; flex-shrink: 0; }
     </div>
   </div>
 </article>
-<article class="repo-card" data-lang="TypeScript" data-stars7d="" data-rank="70" data-name="code-yeongyu/oh-my-openagent" data-score="170.73">
+<article class="repo-card" data-lang="TypeScript" data-stars7d="" data-rank="70" data-name="code-yeongyu/oh-my-openagent" data-score="170.73" data-tags="ai-agents|typescript|orchestration|developer-tools|open-source|ai|amp|anthropic" data-stars="59971" data-forks="4881">
   <div class="card-header">
     <span class="rank-badge">#70</span>
     <div class="card-title-row">
@@ -2193,7 +2392,7 @@ svg { vertical-align: middle; flex-shrink: 0; }
     </div>
   </div>
 </article>
-<article class="repo-card" data-lang="TypeScript" data-stars7d="" data-rank="71" data-name="excalidraw/excalidraw" data-score="170.49">
+<article class="repo-card" data-lang="TypeScript" data-stars7d="" data-rank="71" data-name="excalidraw/excalidraw" data-score="170.49" data-tags="whiteboard|collaborative-drawing|typescript|react|diagram-tool|canvas|collaboration|diagrams" data-stars="124210" data-forks="13819">
   <div class="card-header">
     <span class="rank-badge">#71</span>
     <div class="card-title-row">
@@ -2218,7 +2417,7 @@ svg { vertical-align: middle; flex-shrink: 0; }
     </div>
   </div>
 </article>
-<article class="repo-card" data-lang="HTML" data-stars7d="" data-rank="72" data-name="ripienaar/free-for-dev" data-score="168.52">
+<article class="repo-card" data-lang="HTML" data-stars7d="" data-rank="72" data-name="ripienaar/free-for-dev" data-score="168.52" data-tags="awesome-list|free-resources|devops|cloud-services|developer-tools|free-for-developers" data-stars="122753" data-forks="12885">
   <div class="card-header">
     <span class="rank-badge">#72</span>
     <div class="card-title-row">
@@ -2243,7 +2442,7 @@ svg { vertical-align: middle; flex-shrink: 0; }
     </div>
   </div>
 </article>
-<article class="repo-card" data-lang="Go" data-stars7d="" data-rank="73" data-name="kubernetes/kubernetes" data-score="168.22">
+<article class="repo-card" data-lang="Go" data-stars7d="" data-rank="73" data-name="kubernetes/kubernetes" data-score="168.22" data-tags="kubernetes|containers|orchestration|go|cloud-native|cncf" data-stars="122508" data-forks="43200">
   <div class="card-header">
     <span class="rank-badge">#73</span>
     <div class="card-title-row">
@@ -2268,7 +2467,7 @@ svg { vertical-align: middle; flex-shrink: 0; }
     </div>
   </div>
 </article>
-<article class="repo-card" data-lang="TypeScript" data-stars7d="" data-rank="74" data-name="clash-verge-rev/clash-verge-rev" data-score="166.87">
+<article class="repo-card" data-lang="TypeScript" data-stars7d="" data-rank="74" data-name="clash-verge-rev/clash-verge-rev" data-score="166.87" data-tags="proxy-client|tauri|clash|cross-platform|rust|clash-meta|clash-verge|linux" data-stars="121554" data-forks="8852">
   <div class="card-header">
     <span class="rank-badge">#74</span>
     <div class="card-title-row">
@@ -2293,7 +2492,7 @@ svg { vertical-align: middle; flex-shrink: 0; }
     </div>
   </div>
 </article>
-<article class="repo-card" data-lang="C++" data-stars7d="" data-rank="75" data-name="electron/electron" data-score="166.75">
+<article class="repo-card" data-lang="C++" data-stars7d="" data-rank="75" data-name="electron/electron" data-score="166.75" data-tags="desktop-framework|javascript|cross-platform|chromium|nodejs|c-plus-plus|chrome|css" data-stars="121462" data-forks="17217">
   <div class="card-header">
     <span class="rank-badge">#75</span>
     <div class="card-title-row">
@@ -2318,7 +2517,7 @@ svg { vertical-align: middle; flex-shrink: 0; }
     </div>
   </div>
 </article>
-<article class="repo-card" data-lang="JavaScript" data-stars7d="" data-rank="76" data-name="nodejs/node" data-score="161.22">
+<article class="repo-card" data-lang="JavaScript" data-stars7d="" data-rank="76" data-name="nodejs/node" data-score="161.22" data-tags="javascript|nodejs|runtime|open-source|cross-platform|js|linux|macos" data-stars="117405" data-forks="35684">
   <div class="card-header">
     <span class="rank-badge">#76</span>
     <div class="card-title-row">
@@ -2343,7 +2542,7 @@ svg { vertical-align: middle; flex-shrink: 0; }
     </div>
   </div>
 </article>
-<article class="repo-card" data-lang="TypeScript" data-stars7d="" data-rank="77" data-name="iptv-org/iptv" data-score="160.08">
+<article class="repo-card" data-lang="TypeScript" data-stars7d="" data-rank="77" data-name="iptv-org/iptv" data-score="160.08" data-tags="iptv|streaming|playlist|m3u|tv|streams" data-stars="116591" data-forks="6183">
   <div class="card-header">
     <span class="rank-badge">#77</span>
     <div class="card-title-row">
@@ -2368,7 +2567,7 @@ svg { vertical-align: middle; flex-shrink: 0; }
     </div>
   </div>
 </article>
-<article class="repo-card" data-lang="TypeScript" data-stars7d="" data-rank="78" data-name="shadcn-ui/ui" data-score="158.18">
+<article class="repo-card" data-lang="TypeScript" data-stars7d="" data-rank="78" data-name="shadcn-ui/ui" data-score="158.18" data-tags="react|ui-components|tailwindcss|typescript|design-system|base-ui|components|laravel" data-stars="115217" data-forks="8941">
   <div class="card-header">
     <span class="rank-badge">#78</span>
     <div class="card-title-row">
@@ -2393,7 +2592,7 @@ svg { vertical-align: middle; flex-shrink: 0; }
     </div>
   </div>
 </article>
-<article class="repo-card" data-lang="Rust" data-stars7d="" data-rank="79" data-name="rustdesk/rustdesk" data-score="158.09">
+<article class="repo-card" data-lang="Rust" data-stars7d="" data-rank="79" data-name="rustdesk/rustdesk" data-score="158.09" data-tags="rust|remote-desktop|p2p|self-hosted|cross-platform|android|anydesk|dart" data-stars="115129" data-forks="17359">
   <div class="card-header">
     <span class="rank-badge">#79</span>
     <div class="card-title-row">
@@ -2418,7 +2617,7 @@ svg { vertical-align: middle; flex-shrink: 0; }
     </div>
   </div>
 </article>
-<article class="repo-card" data-lang="Python" data-stars7d="" data-rank="80" data-name="Comfy-Org/ComfyUI" data-score="157.63">
+<article class="repo-card" data-lang="Python" data-stars7d="" data-rank="80" data-name="Comfy-Org/ComfyUI" data-score="157.63" data-tags="ai|image-generation|diffusion-models|node-based-ui|python|comfy|comfyui|pytorch" data-stars="114804" data-forks="13413">
   <div class="card-header">
     <span class="rank-badge">#80</span>
     <div class="card-title-row">
@@ -2443,7 +2642,7 @@ svg { vertical-align: middle; flex-shrink: 0; }
     </div>
   </div>
 </article>
-<article class="repo-card" data-lang="C++" data-stars7d="" data-rank="81" data-name="ggml-org/llama.cpp" data-score="155.93">
+<article class="repo-card" data-lang="C++" data-stars7d="" data-rank="81" data-name="ggml-org/llama.cpp" data-score="155.93" data-tags="ggml" data-stars="113555" data-forks="18897">
   <div class="card-header">
     <span class="rank-badge">#81</span>
     <div class="card-title-row">
@@ -2468,7 +2667,7 @@ svg { vertical-align: middle; flex-shrink: 0; }
     </div>
   </div>
 </article>
-<article class="repo-card" data-lang="" data-stars7d="" data-rank="82" data-name="Hack-with-Github/Awesome-Hacking" data-score="155.42">
+<article class="repo-card" data-lang="" data-stars7d="" data-rank="82" data-name="Hack-with-Github/Awesome-Hacking" data-score="155.42" data-tags="security|hacking|penetration-testing|curated-list|resources|android|awesome|bug-bounty" data-stars="113293" data-forks="10368">
   <div class="card-header">
     <span class="rank-badge">#82</span>
     <div class="card-title-row">
@@ -2493,7 +2692,7 @@ svg { vertical-align: middle; flex-shrink: 0; }
     </div>
   </div>
 </article>
-<article class="repo-card" data-lang="Rust" data-stars7d="" data-rank="83" data-name="rust-lang/rust" data-score="155.38">
+<article class="repo-card" data-lang="Rust" data-stars7d="" data-rank="83" data-name="rust-lang/rust" data-score="155.38" data-tags="rust|compiler|programming-language|systems-programming|language" data-stars="113168" data-forks="15024">
   <div class="card-header">
     <span class="rank-badge">#83</span>
     <div class="card-title-row">
@@ -2518,7 +2717,7 @@ svg { vertical-align: middle; flex-shrink: 0; }
     </div>
   </div>
 </article>
-<article class="repo-card" data-lang="Shell" data-stars7d="" data-rank="84" data-name="d3/d3" data-score="155.13">
+<article class="repo-card" data-lang="Shell" data-stars7d="" data-rank="84" data-name="d3/d3" data-score="155.13" data-tags="javascript|data-visualization|svg|d3js|charting|chart|charts|d3" data-stars="112971" data-forks="22724">
   <div class="card-header">
     <span class="rank-badge">#84</span>
     <div class="card-title-row">
@@ -2543,7 +2742,7 @@ svg { vertical-align: middle; flex-shrink: 0; }
     </div>
   </div>
 </article>
-<article class="repo-card" data-lang="JavaScript" data-stars7d="" data-rank="85" data-name="mrdoob/three.js" data-score="154.85">
+<article class="repo-card" data-lang="JavaScript" data-stars7d="" data-rank="85" data-name="mrdoob/three.js" data-score="154.85" data-tags="3d|augmented-reality|canvas|html5|javascript|svg|virtual-reality|webaudio" data-stars="112743" data-forks="36377">
   <div class="card-header">
     <span class="rank-badge">#85</span>
     <div class="card-title-row">
@@ -2568,7 +2767,7 @@ svg { vertical-align: middle; flex-shrink: 0; }
     </div>
   </div>
 </article>
-<article class="repo-card" data-lang="Python" data-stars7d="" data-rank="86" data-name="Shubhamsaboo/awesome-llm-apps" data-score="153.82">
+<article class="repo-card" data-lang="Python" data-stars7d="" data-rank="86" data-name="Shubhamsaboo/awesome-llm-apps" data-score="153.82" data-tags="llm|ai-agents|rag|python|templates|agents|llms" data-stars="112040" data-forks="16630">
   <div class="card-header">
     <span class="rank-badge">#86</span>
     <div class="card-title-row">
@@ -2593,7 +2792,7 @@ svg { vertical-align: middle; flex-shrink: 0; }
     </div>
   </div>
 </article>
-<article class="repo-card" data-lang="Rust" data-stars7d="" data-rank="87" data-name="googleworkspace/cli" data-score="153.38">
+<article class="repo-card" data-lang="Rust" data-stars7d="" data-rank="87" data-name="googleworkspace/cli" data-score="153.38" data-tags="cli|google-workspace|rust|api-client|ai-agent|agent-skills|automation|discovery-api" data-stars="26644" data-forks="1400">
   <div class="card-header">
     <span class="rank-badge">#87</span>
     <div class="card-title-row">
@@ -2618,7 +2817,7 @@ svg { vertical-align: middle; flex-shrink: 0; }
     </div>
   </div>
 </article>
-<article class="repo-card" data-lang="Jupyter Notebook" data-stars7d="" data-rank="88" data-name="microsoft/generative-ai-for-beginners" data-score="153.14">
+<article class="repo-card" data-lang="Jupyter Notebook" data-stars7d="" data-rank="88" data-name="microsoft/generative-ai-for-beginners" data-score="153.14" data-tags="generative-ai|education|course|python|typescript|ai|azure|chatgpt" data-stars="111481" data-forks="59826">
   <div class="card-header">
     <span class="rank-badge">#88</span>
     <div class="card-title-row">
@@ -2643,7 +2842,7 @@ svg { vertical-align: middle; flex-shrink: 0; }
     </div>
   </div>
 </article>
-<article class="repo-card" data-lang="C++" data-stars7d="" data-rank="89" data-name="godotengine/godot" data-score="152.80">
+<article class="repo-card" data-lang="C++" data-stars7d="" data-rank="89" data-name="godotengine/godot" data-score="152.80" data-tags="game-engine|godot|c++|open-source|multi-platform|game-development|gamedev|godotengine" data-stars="111290" data-forks="25474">
   <div class="card-header">
     <span class="rank-badge">#89</span>
     <div class="card-title-row">
@@ -2668,7 +2867,7 @@ svg { vertical-align: middle; flex-shrink: 0; }
     </div>
   </div>
 </article>
-<article class="repo-card" data-lang="Rust" data-stars7d="" data-rank="90" data-name="zeroclaw-labs/zeroclaw" data-score="152.39">
+<article class="repo-card" data-lang="Rust" data-stars7d="" data-rank="90" data-name="zeroclaw-labs/zeroclaw" data-score="152.39" data-tags="rust|ai-agent|personal-assistant|infrastructure|agentic-ai|agent|agentic|ai" data-stars="31621" data-forks="4660">
   <div class="card-header">
     <span class="rank-badge">#90</span>
     <div class="card-title-row">
@@ -2693,7 +2892,7 @@ svg { vertical-align: middle; flex-shrink: 0; }
     </div>
   </div>
 </article>
-<article class="repo-card" data-lang="Python" data-stars7d="" data-rank="91" data-name="anthropics/financial-services" data-score="152.02">
+<article class="repo-card" data-lang="Python" data-stars7d="" data-rank="91" data-name="anthropics/financial-services" data-score="152.02" data-tags="ai-agents|financial-services|claude|python|workflow-automation" data-stars="28513" data-forks="3995">
   <div class="card-header">
     <span class="rank-badge">#91</span>
     <div class="card-title-row">
@@ -2718,7 +2917,7 @@ svg { vertical-align: middle; flex-shrink: 0; }
     </div>
   </div>
 </article>
-<article class="repo-card" data-lang="JavaScript" data-stars7d="" data-rank="92" data-name="axios/axios" data-score="149.80">
+<article class="repo-card" data-lang="JavaScript" data-stars7d="" data-rank="92" data-name="axios/axios" data-score="149.80" data-tags="http-client|javascript|nodejs|promises|rest-api|hacktoberfest|promise" data-stars="109086" data-forks="11714">
   <div class="card-header">
     <span class="rank-badge">#92</span>
     <div class="card-title-row">
@@ -2743,7 +2942,7 @@ svg { vertical-align: middle; flex-shrink: 0; }
     </div>
   </div>
 </article>
-<article class="repo-card" data-lang="TypeScript" data-stars7d="" data-rank="93" data-name="microsoft/TypeScript" data-score="149.64">
+<article class="repo-card" data-lang="TypeScript" data-stars7d="" data-rank="93" data-name="microsoft/TypeScript" data-score="149.64" data-tags="typescript|javascript|compiler|language|type-checker|typechecker" data-stars="108988" data-forks="13421">
   <div class="card-header">
     <span class="rank-badge">#93</span>
     <div class="card-title-row">
@@ -2768,7 +2967,7 @@ svg { vertical-align: middle; flex-shrink: 0; }
     </div>
   </div>
 </article>
-<article class="repo-card" data-lang="Rust" data-stars7d="" data-rank="94" data-name="tinyhumansai/openhuman" data-score="148.20">
+<article class="repo-card" data-lang="Rust" data-stars7d="" data-rank="94" data-name="tinyhumansai/openhuman" data-score="148.20" data-tags="rust|ai-assistant|open-source|desktop-app|privacy-first" data-stars="29270" data-forks="2764">
   <div class="card-header">
     <span class="rank-badge">#94</span>
     <div class="card-title-row">
@@ -2793,7 +2992,7 @@ svg { vertical-align: middle; flex-shrink: 0; }
     </div>
   </div>
 </article>
-<article class="repo-card" data-lang="TypeScript" data-stars7d="" data-rank="95" data-name="thedotmack/claude-mem" data-score="147.44">
+<article class="repo-card" data-lang="TypeScript" data-stars7d="" data-rank="95" data-name="thedotmack/claude-mem" data-score="147.44" data-tags="ai-memory|claude|typescript|vector-database|ai-agents|ai|anthropic|artificial-intelligence" data-stars="79417" data-forks="6824">
   <div class="card-header">
     <span class="rank-badge">#95</span>
     <div class="card-title-row">
@@ -2818,7 +3017,7 @@ svg { vertical-align: middle; flex-shrink: 0; }
     </div>
   </div>
 </article>
-<article class="repo-card" data-lang="Rust" data-stars7d="" data-rank="96" data-name="tauri-apps/tauri" data-score="147.21">
+<article class="repo-card" data-lang="Rust" data-stars7d="" data-rank="96" data-name="tauri-apps/tauri" data-score="147.21" data-tags="desktop-app|mobile-app|rust|webview|framework|high-performance|native-app|web-frontend" data-stars="107210" data-forks="3650">
   <div class="card-header">
     <span class="rank-badge">#96</span>
     <div class="card-title-row">
@@ -2843,7 +3042,7 @@ svg { vertical-align: middle; flex-shrink: 0; }
     </div>
   </div>
 </article>
-<article class="repo-card" data-lang="C#" data-stars7d="" data-rank="97" data-name="2dust/v2rayN" data-score="147.16">
+<article class="repo-card" data-lang="C#" data-stars7d="" data-rank="97" data-name="2dust/v2rayN" data-score="147.16" data-tags="proxy-client|gui-application|csharp|cross-platform|networking|proxy|shadowsocks|socks5" data-stars="107155" data-forks="15156">
   <div class="card-header">
     <span class="rank-badge">#97</span>
     <div class="card-title-row">
@@ -2868,7 +3067,7 @@ svg { vertical-align: middle; flex-shrink: 0; }
     </div>
   </div>
 </article>
-<article class="repo-card" data-lang="Go" data-stars7d="" data-rank="98" data-name="fatedier/frp" data-score="146.85">
+<article class="repo-card" data-lang="Go" data-stars7d="" data-rank="98" data-name="fatedier/frp" data-score="146.85" data-tags="go|reverse-proxy|tunnel|nat-firewall|networking|expose|firewall|frp" data-stars="106928" data-forks="15058">
   <div class="card-header">
     <span class="rank-badge">#98</span>
     <div class="card-title-row">
@@ -2893,7 +3092,7 @@ svg { vertical-align: middle; flex-shrink: 0; }
     </div>
   </div>
 </article>
-<article class="repo-card" data-lang="Rust" data-stars7d="" data-rank="99" data-name="denoland/deno" data-score="146.78">
+<article class="repo-card" data-lang="Rust" data-stars7d="" data-rank="99" data-name="denoland/deno" data-score="146.78" data-tags="javascript|typescript|runtime|rust|webassembly|deno" data-stars="106892" data-forks="6063">
   <div class="card-header">
     <span class="rank-badge">#99</span>
     <div class="card-title-row">
@@ -2918,7 +3117,7 @@ svg { vertical-align: middle; flex-shrink: 0; }
     </div>
   </div>
 </article>
-<article class="repo-card" data-lang="Shell" data-stars7d="" data-rank="100" data-name="papers-we-love/papers-we-love" data-score="146.33">
+<article class="repo-card" data-lang="Shell" data-stars7d="" data-rank="100" data-name="papers-we-love/papers-we-love" data-score="146.33" data-tags="computer-science|papers|research|community|learning|awesome|meetup|programming" data-stars="106612" data-forks="6363">
   <div class="card-header">
     <span class="rank-badge">#100</span>
     <div class="card-title-row">
@@ -2943,7 +3142,7 @@ svg { vertical-align: middle; flex-shrink: 0; }
     </div>
   </div>
 </article>
-<article class="repo-card" data-lang="Python" data-stars7d="" data-rank="101" data-name="sickn33/antigravity-awesome-skills" data-score="146.02">
+<article class="repo-card" data-lang="Python" data-stars7d="" data-rank="101" data-name="sickn33/antigravity-awesome-skills" data-score="146.02" data-tags="ai-agent-skills|claude-code|developer-tools|ai-coding|prompt-library|agent-skills|agentic-skills|ai-agents" data-stars="39032" data-forks="6344">
   <div class="card-header">
     <span class="rank-badge">#101</span>
     <div class="card-title-row">
@@ -2968,7 +3167,7 @@ svg { vertical-align: middle; flex-shrink: 0; }
     </div>
   </div>
 </article>
-<article class="repo-card" data-lang="Swift" data-stars7d="" data-rank="102" data-name="jaywcjlove/awesome-mac" data-score="143.95">
+<article class="repo-card" data-lang="Swift" data-stars7d="" data-rank="102" data-name="jaywcjlove/awesome-mac" data-score="143.95" data-tags="awesome-list|macos|software|curated-resources|community|app|apple|application" data-stars="104832" data-forks="7814">
   <div class="card-header">
     <span class="rank-badge">#102</span>
     <div class="card-title-row">
@@ -2993,7 +3192,7 @@ svg { vertical-align: middle; flex-shrink: 0; }
     </div>
   </div>
 </article>
-<article class="repo-card" data-lang="TypeScript" data-stars7d="" data-rank="103" data-name="google-gemini/gemini-cli" data-score="143.77">
+<article class="repo-card" data-lang="TypeScript" data-stars7d="" data-rank="103" data-name="google-gemini/gemini-cli" data-score="143.77" data-tags="ai-agent|cli|typescript|gemini-api|developer-tools|ai|ai-agents|gemini" data-stars="104688" data-forks="13918">
   <div class="card-header">
     <span class="rank-badge">#103</span>
     <div class="card-title-row">
@@ -3018,7 +3217,7 @@ svg { vertical-align: middle; flex-shrink: 0; }
     </div>
   </div>
 </article>
-<article class="repo-card" data-lang="Python" data-stars7d="" data-rank="104" data-name="ZhuLinsen/daily_stock_analysis" data-score="142.82">
+<article class="repo-card" data-lang="Python" data-stars7d="" data-rank="104" data-name="ZhuLinsen/daily_stock_analysis" data-score="142.82" data-tags="stock-analysis|llm|ai-agent|quantitative-trading|python|a-stock|aigc|quant" data-stars="39281" data-forks="37935">
   <div class="card-header">
     <span class="rank-badge">#104</span>
     <div class="card-title-row">
@@ -3043,7 +3242,7 @@ svg { vertical-align: middle; flex-shrink: 0; }
     </div>
   </div>
 </article>
-<article class="repo-card" data-lang="C++" data-stars7d="" data-rank="105" data-name="microsoft/terminal" data-score="141.92">
+<article class="repo-card" data-lang="C++" data-stars7d="" data-rank="105" data-name="microsoft/terminal" data-score="141.92" data-tags="terminal|windows|command-line|cpp|open-source|cmd|console|contributions-welcome" data-stars="103338" data-forks="9303">
   <div class="card-header">
     <span class="rank-badge">#105</span>
     <div class="card-title-row">
@@ -3068,7 +3267,7 @@ svg { vertical-align: middle; flex-shrink: 0; }
     </div>
   </div>
 </article>
-<article class="repo-card" data-lang="TypeScript" data-stars7d="" data-rank="106" data-name="supabase/supabase" data-score="141.65">
+<article class="repo-card" data-lang="TypeScript" data-stars7d="" data-rank="106" data-name="supabase/supabase" data-score="141.65" data-tags="postgres|backend-as-a-service|firebase-alternative|typescript|database|ai|alternative|auth" data-stars="103140" data-forks="12566">
   <div class="card-header">
     <span class="rank-badge">#106</span>
     <div class="card-title-row">
@@ -3093,7 +3292,7 @@ svg { vertical-align: middle; flex-shrink: 0; }
     </div>
   </div>
 </article>
-<article class="repo-card" data-lang="Rust" data-stars7d="" data-rank="107" data-name="farion1231/cc-switch" data-score="141.28">
+<article class="repo-card" data-lang="Rust" data-stars7d="" data-rank="107" data-name="farion1231/cc-switch" data-score="141.28" data-tags="ai-tools|desktop-app|rust|claude|assistant|claude-code|codex|hermes" data-stars="83709" data-forks="5443">
   <div class="card-header">
     <span class="rank-badge">#107</span>
     <div class="card-title-row">
@@ -3118,7 +3317,7 @@ svg { vertical-align: middle; flex-shrink: 0; }
     </div>
   </div>
 </article>
-<article class="repo-card" data-lang="TypeScript" data-stars7d="" data-rank="108" data-name="immich-app/immich" data-score="140.29">
+<article class="repo-card" data-lang="TypeScript" data-stars7d="" data-rank="108" data-name="immich-app/immich" data-score="140.29" data-tags="self-hosted|photo-management|typescript|mobile-app|google-photos-alternative|backup-tool|flutter|google-photos" data-stars="102151" data-forks="5744">
   <div class="card-header">
     <span class="rank-badge">#108</span>
     <div class="card-title-row">
@@ -3143,7 +3342,7 @@ svg { vertical-align: middle; flex-shrink: 0; }
     </div>
   </div>
 </article>
-<article class="repo-card" data-lang="Python" data-stars7d="" data-rank="109" data-name="ComposioHQ/awesome-claude-skills" data-score="140.01">
+<article class="repo-card" data-lang="Python" data-stars7d="" data-rank="109" data-name="ComposioHQ/awesome-claude-skills" data-score="140.01" data-tags="claude-ai|ai-skills|workflow-automation|developer-tools|api-integration|agent-skills|ai-agents|antigravity" data-stars="62300" data-forks="6824">
   <div class="card-header">
     <span class="rank-badge">#109</span>
     <div class="card-title-row">
@@ -3168,7 +3367,7 @@ svg { vertical-align: middle; flex-shrink: 0; }
     </div>
   </div>
 </article>
-<article class="repo-card" data-lang="Rust" data-stars7d="" data-rank="110" data-name="Hmbown/CodeWhale" data-score="138.52">
+<article class="repo-card" data-lang="Rust" data-stars7d="" data-rank="110" data-name="Hmbown/CodeWhale" data-score="138.52" data-tags="coding-agent|deepseek|rust|cli|llm|terminal-ui|terminal|tui" data-stars="35647" data-forks="3051">
   <div class="card-header">
     <span class="rank-badge">#110</span>
     <div class="card-title-row">
@@ -3193,7 +3392,7 @@ svg { vertical-align: middle; flex-shrink: 0; }
     </div>
   </div>
 </article>
-<article class="repo-card" data-lang="" data-stars7d="" data-rank="111" data-name="Anduin2017/HowToCook" data-score="137.78">
+<article class="repo-card" data-lang="" data-stars7d="" data-rank="111" data-name="Anduin2017/HowToCook" data-score="137.78" data-tags="cookbook|recipes|chinese|cooking|community|dishes" data-stars="100341" data-forks="10967">
   <div class="card-header">
     <span class="rank-badge">#111</span>
     <div class="card-title-row">
@@ -3218,7 +3417,7 @@ svg { vertical-align: middle; flex-shrink: 0; }
     </div>
   </div>
 </article>
-<article class="repo-card" data-lang="Python" data-stars7d="" data-rank="112" data-name="pytorch/pytorch" data-score="137.68">
+<article class="repo-card" data-lang="Python" data-stars7d="" data-rank="112" data-name="pytorch/pytorch" data-score="137.68" data-tags="python|deep-learning|machine-learning|gpu|neural-networks|autograd|neural-network|numpy" data-stars="100238" data-forks="27873">
   <div class="card-header">
     <span class="rank-badge">#112</span>
     <div class="card-title-row">
@@ -3243,7 +3442,7 @@ svg { vertical-align: middle; flex-shrink: 0; }
     </div>
   </div>
 </article>
-<article class="repo-card" data-lang="TypeScript" data-stars7d="" data-rank="113" data-name="angular/angular" data-score="137.54">
+<article class="repo-card" data-lang="TypeScript" data-stars7d="" data-rank="113" data-name="angular/angular" data-score="137.54" data-tags="typescript|web-framework|javascript|pwa|angular|web|web-performance" data-stars="100125" data-forks="27272">
   <div class="card-header">
     <span class="rank-badge">#113</span>
     <div class="card-title-row">
@@ -3268,7 +3467,7 @@ svg { vertical-align: middle; flex-shrink: 0; }
     </div>
   </div>
 </article>
-<article class="repo-card" data-lang="Vim Script" data-stars7d="" data-rank="114" data-name="neovim/neovim" data-score="137.23">
+<article class="repo-card" data-lang="Vim Script" data-stars7d="" data-rank="114" data-name="neovim/neovim" data-score="137.23" data-tags="text-editor|vim|lua|c|extensible|api|neovim|nvim" data-stars="99918" data-forks="6908">
   <div class="card-header">
     <span class="rank-badge">#114</span>
     <div class="card-title-row">
@@ -3293,7 +3492,7 @@ svg { vertical-align: middle; flex-shrink: 0; }
     </div>
   </div>
 </article>
-<article class="repo-card" data-lang="Python" data-stars7d="" data-rank="115" data-name="fastapi/fastapi" data-score="135.45">
+<article class="repo-card" data-lang="Python" data-stars7d="" data-rank="115" data-name="fastapi/fastapi" data-score="135.45" data-tags="python|web-framework|api|async|rest-api|asyncio|fastapi|framework" data-stars="98613" data-forks="9346">
   <div class="card-header">
     <span class="rank-badge">#115</span>
     <div class="card-title-row">
@@ -3318,7 +3517,7 @@ svg { vertical-align: middle; flex-shrink: 0; }
     </div>
   </div>
 </article>
-<article class="repo-card" data-lang="Shell" data-stars7d="" data-rank="116" data-name="Leonxlnx/taste-skill" data-score="135.19">
+<article class="repo-card" data-lang="Shell" data-stars7d="" data-rank="116" data-name="Leonxlnx/taste-skill" data-score="135.19" data-tags="ai-agents|frontend-design|claude|prompt-engineering|ui-generation|agent|ai|claude-code" data-stars="26429" data-forks="1976">
   <div class="card-header">
     <span class="rank-badge">#116</span>
     <div class="card-title-row">
@@ -3343,7 +3542,7 @@ svg { vertical-align: middle; flex-shrink: 0; }
     </div>
   </div>
 </article>
-<article class="repo-card" data-lang="JavaScript" data-stars7d="" data-rank="117" data-name="mui/material-ui" data-score="135.14">
+<article class="repo-card" data-lang="JavaScript" data-stars7d="" data-rank="117" data-name="mui/material-ui" data-score="135.14" data-tags="react|material-design|component-library|design-system|ui-framework|material-ui|react-components" data-stars="98366" data-forks="32622">
   <div class="card-header">
     <span class="rank-badge">#117</span>
     <div class="card-title-row">
@@ -3368,7 +3567,7 @@ svg { vertical-align: middle; flex-shrink: 0; }
     </div>
   </div>
 </article>
-<article class="repo-card" data-lang="TypeScript" data-stars7d="" data-rank="118" data-name="ant-design/ant-design" data-score="134.91">
+<article class="repo-card" data-lang="TypeScript" data-stars7d="" data-rank="118" data-name="ant-design/ant-design" data-score="134.91" data-tags="react|ui-library|design-system|typescript|component-library|ant-design|antd|design-systems" data-stars="98170" data-forks="54612">
   <div class="card-header">
     <span class="rank-badge">#118</span>
     <div class="card-title-row">
@@ -3393,7 +3592,7 @@ svg { vertical-align: middle; flex-shrink: 0; }
     </div>
   </div>
 </article>
-<article class="repo-card" data-lang="HTML" data-stars7d="" data-rank="119" data-name="shanraisshan/claude-code-best-practice" data-score="132.72">
+<article class="repo-card" data-lang="HTML" data-stars7d="" data-rank="119" data-name="shanraisshan/claude-code-best-practice" data-score="132.72" data-tags="claude-ai|agentic-engineering|best-practices|ai-development|anthropic|agentic-ai|agentic-coding|agentic-workflow" data-stars="55323" data-forks="5561">
   <div class="card-header">
     <span class="rank-badge">#119</span>
     <div class="card-title-row">
@@ -3418,7 +3617,7 @@ svg { vertical-align: middle; flex-shrink: 0; }
     </div>
   </div>
 </article>
-<article class="repo-card" data-lang="Jupyter Notebook" data-stars7d="" data-rank="120" data-name="rasbt/LLMs-from-scratch" data-score="132.11">
+<article class="repo-card" data-lang="Jupyter Notebook" data-stars7d="" data-rank="120" data-name="rasbt/LLMs-from-scratch" data-score="132.11" data-tags="llm|pytorch|education|gpt|transformer|ai|artificial-intelligence|attention-mechanism" data-stars="96193" data-forks="14712">
   <div class="card-header">
     <span class="rank-badge">#120</span>
     <div class="card-title-row">
@@ -3443,7 +3642,7 @@ svg { vertical-align: middle; flex-shrink: 0; }
     </div>
   </div>
 </article>
-<article class="repo-card" data-lang="Python" data-stars7d="" data-rank="121" data-name="browser-use/browser-use" data-score="131.95">
+<article class="repo-card" data-lang="Python" data-stars7d="" data-rank="121" data-name="browser-use/browser-use" data-score="131.95" data-tags="python|ai-agents|browser-automation|llm|web-scraping|ai-tools|browser-use|playwright" data-stars="96068" data-forks="10785">
   <div class="card-header">
     <span class="rank-badge">#121</span>
     <div class="card-title-row">
@@ -3468,7 +3667,7 @@ svg { vertical-align: middle; flex-shrink: 0; }
     </div>
   </div>
 </article>
-<article class="repo-card" data-lang="Rust" data-stars7d="" data-rank="122" data-name="AlexsJones/llmfit" data-score="131.85">
+<article class="repo-card" data-lang="Rust" data-stars7d="" data-rank="122" data-name="AlexsJones/llmfit" data-score="131.85" data-tags="llm|rust|terminal-ui|model-optimization|hardware-detection|gguf|localai|mlx" data-stars="26826" data-forks="1630">
   <div class="card-header">
     <span class="rank-badge">#122</span>
     <div class="card-title-row">
@@ -3493,7 +3692,7 @@ svg { vertical-align: middle; flex-shrink: 0; }
     </div>
   </div>
 </article>
-<article class="repo-card" data-lang="JavaScript" data-stars7d="" data-rank="123" data-name="microsoft/Web-Dev-For-Beginners" data-score="131.54">
+<article class="repo-card" data-lang="JavaScript" data-stars7d="" data-rank="123" data-name="microsoft/Web-Dev-For-Beginners" data-score="131.54" data-tags="web-development|curriculum|javascript|html-css|education|css|html|learning" data-stars="95824" data-forks="15548">
   <div class="card-header">
     <span class="rank-badge">#123</span>
     <div class="card-title-row">
@@ -3518,7 +3717,7 @@ svg { vertical-align: middle; flex-shrink: 0; }
     </div>
   </div>
 </article>
-<article class="repo-card" data-lang="TypeScript" data-stars7d="" data-rank="124" data-name="tailwindlabs/tailwindcss" data-score="130.69">
+<article class="repo-card" data-lang="TypeScript" data-stars7d="" data-rank="124" data-name="tailwindlabs/tailwindcss" data-score="130.69" data-tags="css-framework|tailwindcss|utility-classes|typescript|rust|css|functional-css|postcss" data-stars="95142" data-forks="5270">
   <div class="card-header">
     <span class="rank-badge">#124</span>
     <div class="card-title-row">
@@ -3543,7 +3742,7 @@ svg { vertical-align: middle; flex-shrink: 0; }
     </div>
   </div>
 </article>
-<article class="repo-card" data-lang="TypeScript" data-stars7d="" data-rank="125" data-name="Yeachan-Heo/oh-my-codex" data-score="130.27">
+<article class="repo-card" data-lang="TypeScript" data-stars7d="" data-rank="125" data-name="Yeachan-Heo/oh-my-codex" data-score="130.27" data-tags="ai-coding|codex|typescript|orchestration|workflow-automation" data-stars="29878" data-forks="2366">
   <div class="card-header">
     <span class="rank-badge">#125</span>
     <div class="card-title-row">
@@ -3568,7 +3767,7 @@ svg { vertical-align: middle; flex-shrink: 0; }
     </div>
   </div>
 </article>
-<article class="repo-card" data-lang="TypeScript" data-stars7d="" data-rank="126" data-name="puppeteer/puppeteer" data-score="129.66">
+<article class="repo-card" data-lang="TypeScript" data-stars7d="" data-rank="126" data-name="puppeteer/puppeteer" data-score="129.66" data-tags="browser-automation|testing|javascript|chrome|headless-browser|automation|chromium|developer-tools" data-stars="94383" data-forks="9421">
   <div class="card-header">
     <span class="rank-badge">#126</span>
     <div class="card-title-row">
@@ -3593,7 +3792,7 @@ svg { vertical-align: middle; flex-shrink: 0; }
     </div>
   </div>
 </article>
-<article class="repo-card" data-lang="Go" data-stars7d="" data-rank="127" data-name="sipeed/picoclaw" data-score="129.61">
+<article class="repo-card" data-lang="Go" data-stars7d="" data-rank="127" data-name="sipeed/picoclaw" data-score="129.61" data-tags="golang|ai-assistant|edge-computing|lightweight|llm" data-stars="29208" data-forks="4182">
   <div class="card-header">
     <span class="rank-badge">#127</span>
     <div class="card-title-row">
@@ -3618,7 +3817,7 @@ svg { vertical-align: middle; flex-shrink: 0; }
     </div>
   </div>
 </article>
-<article class="repo-card" data-lang="Java" data-stars7d="" data-rank="128" data-name="iluwatar/java-design-patterns" data-score="129.09">
+<article class="repo-card" data-lang="Java" data-stars7d="" data-rank="128" data-name="iluwatar/java-design-patterns" data-score="129.09" data-tags="java|design-patterns|educational-resource|code-examples|software-architecture|awesome-list|hacktoberfest|principles" data-stars="94049" data-forks="27367">
   <div class="card-header">
     <span class="rank-badge">#128</span>
     <div class="card-title-row">
@@ -3643,7 +3842,7 @@ svg { vertical-align: middle; flex-shrink: 0; }
     </div>
   </div>
 </article>
-<article class="repo-card" data-lang="Shell" data-stars7d="" data-rank="129" data-name="nvm-sh/nvm" data-score="128.48">
+<article class="repo-card" data-lang="Shell" data-stars7d="" data-rank="129" data-name="nvm-sh/nvm" data-score="128.48" data-tags="nodejs|version-manager|bash|shell|install|lts|node|node-js" data-stars="93580" data-forks="10203">
   <div class="card-header">
     <span class="rank-badge">#129</span>
     <div class="card-title-row">
@@ -3668,7 +3867,7 @@ svg { vertical-align: middle; flex-shrink: 0; }
     </div>
   </div>
 </article>
-<article class="repo-card" data-lang="Python" data-stars7d="" data-rank="130" data-name="hacksider/Deep-Live-Cam" data-score="128.30">
+<article class="repo-card" data-lang="Python" data-stars7d="" data-rank="130" data-name="hacksider/Deep-Live-Cam" data-score="128.30" data-tags="deepfake|face-swap|real-time|python|ai|ai-deep-fake|ai-face|ai-webcam" data-stars="93407" data-forks="13613">
   <div class="card-header">
     <span class="rank-badge">#130</span>
     <div class="card-title-row">
@@ -3693,7 +3892,7 @@ svg { vertical-align: middle; flex-shrink: 0; }
     </div>
   </div>
 </article>
-<article class="repo-card" data-lang="Python" data-stars7d="" data-rank="131" data-name="Alishahryar1/free-claude-code" data-score="127.79">
+<article class="repo-card" data-lang="Python" data-stars7d="" data-rank="131" data-name="Alishahryar1/free-claude-code" data-score="127.79" data-tags="python|api-proxy|llm|claude|developer-tools" data-stars="30586" data-forks="4625">
   <div class="card-header">
     <span class="rank-badge">#131</span>
     <div class="card-title-row">
@@ -3718,7 +3917,7 @@ svg { vertical-align: middle; flex-shrink: 0; }
     </div>
   </div>
 </article>
-<article class="repo-card" data-lang="Rust" data-stars7d="" data-rank="132" data-name="oven-sh/bun" data-score="127.20">
+<article class="repo-card" data-lang="Rust" data-stars7d="" data-rank="132" data-name="oven-sh/bun" data-score="127.20" data-tags="javascript|typescript|runtime|bundler|package-manager|bun|javascriptcore|jsx" data-stars="92603" data-forks="4671">
   <div class="card-header">
     <span class="rank-badge">#132</span>
     <div class="card-title-row">
@@ -3743,7 +3942,7 @@ svg { vertical-align: middle; flex-shrink: 0; }
     </div>
   </div>
 </article>
-<article class="repo-card" data-lang="TypeScript" data-stars7d="" data-rank="133" data-name="Yeachan-Heo/oh-my-claudecode" data-score="127.00">
+<article class="repo-card" data-lang="TypeScript" data-stars7d="" data-rank="133" data-name="Yeachan-Heo/oh-my-claudecode" data-score="127.00" data-tags="ai-agents|claude|multi-agent-orchestration|typescript|automation|agentic-coding|claude-code|multi-agent-systems" data-stars="35204" data-forks="3228">
   <div class="card-header">
     <span class="rank-badge">#133</span>
     <div class="card-title-row">
@@ -3768,7 +3967,7 @@ svg { vertical-align: middle; flex-shrink: 0; }
     </div>
   </div>
 </article>
-<article class="repo-card" data-lang="" data-stars7d="" data-rank="134" data-name="ruanyf/weekly" data-score="126.79">
+<article class="repo-card" data-lang="" data-stars7d="" data-rank="134" data-name="ruanyf/weekly" data-score="126.79" data-tags="newsletter|technology|chinese|curated-content|community" data-stars="92307" data-forks="4125">
   <div class="card-header">
     <span class="rank-badge">#134</span>
     <div class="card-title-row">
@@ -3793,7 +3992,7 @@ svg { vertical-align: middle; flex-shrink: 0; }
     </div>
   </div>
 </article>
-<article class="repo-card" data-lang="Rust" data-stars7d="" data-rank="135" data-name="vercel-labs/agent-browser" data-score="126.60">
+<article class="repo-card" data-lang="Rust" data-stars7d="" data-rank="135" data-name="vercel-labs/agent-browser" data-score="126.60" data-tags="browser-automation|rust|cli|ai-agents|chrome-automation" data-stars="34592" data-forks="2180">
   <div class="card-header">
     <span class="rank-badge">#135</span>
     <div class="card-title-row">
@@ -3818,7 +4017,7 @@ svg { vertical-align: middle; flex-shrink: 0; }
     </div>
   </div>
 </article>
-<article class="repo-card" data-lang="TypeScript" data-stars7d="" data-rank="136" data-name="nanocoai/nanoclaw" data-score="126.49">
+<article class="repo-card" data-lang="TypeScript" data-stars7d="" data-rank="136" data-name="nanocoai/nanoclaw" data-score="126.49" data-tags="ai-agents|claude|typescript|docker|messaging|ai-assistant|claude-code|claude-skills" data-stars="29503" data-forks="12885">
   <div class="card-header">
     <span class="rank-badge">#136</span>
     <div class="card-title-row">
@@ -3843,7 +4042,7 @@ svg { vertical-align: middle; flex-shrink: 0; }
     </div>
   </div>
 </article>
-<article class="repo-card" data-lang="TypeScript" data-stars7d="" data-rank="137" data-name="multica-ai/multica" data-score="126.06">
+<article class="repo-card" data-lang="TypeScript" data-stars7d="" data-rank="137" data-name="multica-ai/multica" data-score="126.06" data-tags="ai-agents|typescript|agent-management|open-source|automation" data-stars="33939" data-forks="4085">
   <div class="card-header">
     <span class="rank-badge">#137</span>
     <div class="card-title-row">
@@ -3868,7 +4067,7 @@ svg { vertical-align: middle; flex-shrink: 0; }
     </div>
   </div>
 </article>
-<article class="repo-card" data-lang="TypeScript" data-stars7d="" data-rank="138" data-name="storybookjs/storybook" data-score="123.80">
+<article class="repo-card" data-lang="TypeScript" data-stars7d="" data-rank="138" data-name="storybookjs/storybook" data-score="123.80" data-tags="ui-development|component-library|documentation|testing|design-systems|angular|components|html" data-stars="90109" data-forks="10097">
   <div class="card-header">
     <span class="rank-badge">#138</span>
     <div class="card-title-row">
@@ -3893,7 +4092,7 @@ svg { vertical-align: middle; flex-shrink: 0; }
     </div>
   </div>
 </article>
-<article class="repo-card" data-lang="TypeScript" data-stars7d="" data-rank="139" data-name="microsoft/playwright" data-score="123.30">
+<article class="repo-card" data-lang="TypeScript" data-stars7d="" data-rank="139" data-name="microsoft/playwright" data-score="123.30" data-tags="e2e-testing|test-automation|web-automation|typescript|browser-testing|automation|chrome|chromium" data-stars="89744" data-forks="5807">
   <div class="card-header">
     <span class="rank-badge">#139</span>
     <div class="card-title-row">
@@ -3918,7 +4117,7 @@ svg { vertical-align: middle; flex-shrink: 0; }
     </div>
   </div>
 </article>
-<article class="repo-card" data-lang="C++" data-stars7d="" data-rank="140" data-name="bitcoin/bitcoin" data-score="122.61">
+<article class="repo-card" data-lang="C++" data-stars7d="" data-rank="140" data-name="bitcoin/bitcoin" data-score="122.61" data-tags="bitcoin|cryptocurrency|c++|p2p|blockchain|c-plus-plus|cryptography" data-stars="89207" data-forks="38979">
   <div class="card-header">
     <span class="rank-badge">#140</span>
     <div class="card-title-row">
@@ -3943,7 +4142,7 @@ svg { vertical-align: middle; flex-shrink: 0; }
     </div>
   </div>
 </article>
-<article class="repo-card" data-lang="TypeScript" data-stars7d="" data-rank="141" data-name="colbymchenry/codegraph" data-score="122.30">
+<article class="repo-card" data-lang="TypeScript" data-stars7d="" data-rank="141" data-name="colbymchenry/codegraph" data-score="122.30" data-tags="code-intelligence|knowledge-graph|static-analysis|typescript|developer-tools" data-stars="31706" data-forks="1866">
   <div class="card-header">
     <span class="rank-badge">#141</span>
     <div class="card-title-row">
@@ -3968,7 +4167,7 @@ svg { vertical-align: middle; flex-shrink: 0; }
     </div>
   </div>
 </article>
-<article class="repo-card" data-lang="Go" data-stars7d="" data-rank="142" data-name="gin-gonic/gin" data-score="121.55">
+<article class="repo-card" data-lang="Go" data-stars7d="" data-rank="142" data-name="gin-gonic/gin" data-score="121.55" data-tags="go|web-framework|rest-api|high-performance|microservices|framework|gin|middleware" data-stars="88558" data-forks="8617">
   <div class="card-header">
     <span class="rank-badge">#142</span>
     <div class="card-title-row">
@@ -3993,7 +4192,7 @@ svg { vertical-align: middle; flex-shrink: 0; }
     </div>
   </div>
 </article>
-<article class="repo-card" data-lang="TypeScript" data-stars7d="" data-rank="143" data-name="mermaid-js/mermaid" data-score="121.35">
+<article class="repo-card" data-lang="TypeScript" data-stars7d="" data-rank="143" data-name="mermaid-js/mermaid" data-score="121.35" data-tags="diagrams|javascript|typescript|documentation|markdown|diagrams-as-code|flowchart|mindmap" data-stars="88324" data-forks="9013">
   <div class="card-header">
     <span class="rank-badge">#143</span>
     <div class="card-title-row">
@@ -4018,7 +4217,7 @@ svg { vertical-align: middle; flex-shrink: 0; }
     </div>
   </div>
 </article>
-<article class="repo-card" data-lang="Go" data-stars7d="" data-rank="144" data-name="gohugoio/hugo" data-score="121.32">
+<article class="repo-card" data-lang="Go" data-stars7d="" data-rank="144" data-name="gohugoio/hugo" data-score="121.32" data-tags="static-site-generator|go|cms|website-builder|blog-engine|content-management-system|documentation-tool|hugo" data-stars="88297" data-forks="8270">
   <div class="card-header">
     <span class="rank-badge">#144</span>
     <div class="card-title-row">
@@ -4043,7 +4242,7 @@ svg { vertical-align: middle; flex-shrink: 0; }
     </div>
   </div>
 </article>
-<article class="repo-card" data-lang="TypeScript" data-stars7d="" data-rank="145" data-name="ChatGPTNextWeb/NextChat" data-score="121.06">
+<article class="repo-card" data-lang="TypeScript" data-stars7d="" data-rank="145" data-name="ChatGPTNextWeb/NextChat" data-score="121.06" data-tags="chatgpt-client|cross-platform|nextjs|react|ai-chat|calclaude|chatgpt|claude" data-stars="88108" data-forks="59687">
   <div class="card-header">
     <span class="rank-badge">#145</span>
     <div class="card-title-row">
@@ -4068,7 +4267,7 @@ svg { vertical-align: middle; flex-shrink: 0; }
     </div>
   </div>
 </article>
-<article class="repo-card" data-lang="" data-stars7d="" data-rank="146" data-name="punkpeye/awesome-mcp-servers" data-score="121.04">
+<article class="repo-card" data-lang="" data-stars7d="" data-rank="146" data-name="punkpeye/awesome-mcp-servers" data-score="121.04" data-tags="mcp|ai|directory|integration|protocol" data-stars="88100" data-forks="10854">
   <div class="card-header">
     <span class="rank-badge">#146</span>
     <div class="card-title-row">
@@ -4093,7 +4292,7 @@ svg { vertical-align: middle; flex-shrink: 0; }
     </div>
   </div>
 </article>
-<article class="repo-card" data-lang="C++" data-stars7d="" data-rank="147" data-name="opencv/opencv" data-score="120.54">
+<article class="repo-card" data-lang="C++" data-stars7d="" data-rank="147" data-name="opencv/opencv" data-score="120.54" data-tags="computer-vision|image-processing|c-plus-plus|deep-learning|opencv" data-stars="87678" data-forks="56579">
   <div class="card-header">
     <span class="rank-badge">#147</span>
     <div class="card-title-row">
@@ -4118,7 +4317,7 @@ svg { vertical-align: middle; flex-shrink: 0; }
     </div>
   </div>
 </article>
-<article class="repo-card" data-lang="Python" data-stars7d="" data-rank="148" data-name="django/django" data-score="120.38">
+<article class="repo-card" data-lang="Python" data-stars7d="" data-rank="148" data-name="django/django" data-score="120.38" data-tags="python|web-framework|django|orm|backend|apps|framework|models" data-stars="87582" data-forks="33954">
   <div class="card-header">
     <span class="rank-badge">#148</span>
     <div class="card-title-row">
@@ -4143,7 +4342,7 @@ svg { vertical-align: middle; flex-shrink: 0; }
     </div>
   </div>
 </article>
-<article class="repo-card" data-lang="Python" data-stars7d="" data-rank="149" data-name="home-assistant/core" data-score="120.09">
+<article class="repo-card" data-lang="Python" data-stars7d="" data-rank="149" data-name="home-assistant/core" data-score="120.09" data-tags="home-automation|python|iot|smart-home|open-source|asyncio|hacktoberfest|internet-of-things" data-stars="87369" data-forks="37573">
   <div class="card-header">
     <span class="rank-badge">#149</span>
     <div class="card-title-row">
@@ -4168,7 +4367,7 @@ svg { vertical-align: middle; flex-shrink: 0; }
     </div>
   </div>
 </article>
-<article class="repo-card" data-lang="JavaScript" data-stars7d="" data-rank="150" data-name="louislam/uptime-kuma" data-score="120.07">
+<article class="repo-card" data-lang="JavaScript" data-stars7d="" data-rank="150" data-name="louislam/uptime-kuma" data-score="120.07" data-tags="monitoring|uptime-monitoring|self-hosted|docker|javascript|vue|monitor|responsive" data-stars="87381" data-forks="7916">
   <div class="card-header">
     <span class="rank-badge">#150</span>
     <div class="card-title-row">
@@ -4193,7 +4392,7 @@ svg { vertical-align: middle; flex-shrink: 0; }
     </div>
   </div>
 </article>
-<article class="repo-card" data-lang="Python" data-stars7d="" data-rank="151" data-name="karpathy/nanochat" data-score="119.91">
+<article class="repo-card" data-lang="Python" data-stars7d="" data-rank="151" data-name="karpathy/nanochat" data-score="119.91" data-tags="llm|language-model|gpt|pytorch|training" data-stars="54341" data-forks="7347">
   <div class="card-header">
     <span class="rank-badge">#151</span>
     <div class="card-title-row">
@@ -4218,7 +4417,7 @@ svg { vertical-align: middle; flex-shrink: 0; }
     </div>
   </div>
 </article>
-<article class="repo-card" data-lang="JavaScript" data-stars7d="" data-rank="152" data-name="sveltejs/svelte" data-score="119.06">
+<article class="repo-card" data-lang="JavaScript" data-stars7d="" data-rank="152" data-name="sveltejs/svelte" data-score="119.06" data-tags="compiler|javascript|ui-framework|web-development|frontend|template|ui" data-stars="86653" data-forks="4922">
   <div class="card-header">
     <span class="rank-badge">#152</span>
     <div class="card-title-row">
@@ -4243,7 +4442,7 @@ svg { vertical-align: middle; flex-shrink: 0; }
     </div>
   </div>
 </article>
-<article class="repo-card" data-lang="Rust" data-stars7d="" data-rank="153" data-name="openai/codex" data-score="119.04">
+<article class="repo-card" data-lang="Rust" data-stars7d="" data-rank="153" data-name="openai/codex" data-score="119.04" data-tags="ai-coding-agent|rust|cli-tool|openai" data-stars="86635" data-forks="12680">
   <div class="card-header">
     <span class="rank-badge">#153</span>
     <div class="card-title-row">
@@ -4268,7 +4467,7 @@ svg { vertical-align: middle; flex-shrink: 0; }
     </div>
   </div>
 </article>
-<article class="repo-card" data-lang="TypeScript" data-stars7d="" data-rank="154" data-name="modelcontextprotocol/servers" data-score="118.75">
+<article class="repo-card" data-lang="TypeScript" data-stars7d="" data-rank="154" data-name="modelcontextprotocol/servers" data-score="118.75" data-tags="model-context-protocol|llm-tools|typescript|python|reference-implementation" data-stars="86419" data-forks="10856">
   <div class="card-header">
     <span class="rank-badge">#154</span>
     <div class="card-title-row">
@@ -4293,7 +4492,7 @@ svg { vertical-align: middle; flex-shrink: 0; }
     </div>
   </div>
 </article>
-<article class="repo-card" data-lang="Jupyter Notebook" data-stars7d="" data-rank="155" data-name="microsoft/ML-For-Beginners" data-score="118.20">
+<article class="repo-card" data-lang="Jupyter Notebook" data-stars7d="" data-rank="155" data-name="microsoft/ML-For-Beginners" data-score="118.20" data-tags="machine-learning|education|python|curriculum|data-science|machine-learning-algorithms|machinelearning|machinelearning-python" data-stars="86015" data-forks="20851">
   <div class="card-header">
     <span class="rank-badge">#155</span>
     <div class="card-title-row">
@@ -4318,7 +4517,7 @@ svg { vertical-align: middle; flex-shrink: 0; }
     </div>
   </div>
 </article>
-<article class="repo-card" data-lang="Rust" data-stars7d="" data-rank="156" data-name="astral-sh/uv" data-score="117.71">
+<article class="repo-card" data-lang="Rust" data-stars7d="" data-rank="156" data-name="astral-sh/uv" data-score="117.71" data-tags="python|package-manager|rust|cli|dev-tools|packaging|resolver|uv" data-stars="85673" data-forks="3139">
   <div class="card-header">
     <span class="rank-badge">#156</span>
     <div class="card-title-row">
@@ -4343,7 +4542,7 @@ svg { vertical-align: middle; flex-shrink: 0; }
     </div>
   </div>
 </article>
-<article class="repo-card" data-lang="JavaScript" data-stars7d="" data-rank="157" data-name="coreyhaines31/marketingskills" data-score="116.71">
+<article class="repo-card" data-lang="JavaScript" data-stars7d="" data-rank="157" data-name="coreyhaines31/marketingskills" data-score="116.71" data-tags="ai-agents|marketing|claude|javascript|skill-system|codex" data-stars="30944" data-forks="5111">
   <div class="card-header">
     <span class="rank-badge">#157</span>
     <div class="card-title-row">
@@ -4368,7 +4567,7 @@ svg { vertical-align: middle; flex-shrink: 0; }
     </div>
   </div>
 </article>
-<article class="repo-card" data-lang="Go" data-stars7d="" data-rank="158" data-name="syncthing/syncthing" data-score="116.38">
+<article class="repo-card" data-lang="Go" data-stars7d="" data-rank="158" data-name="syncthing/syncthing" data-score="116.38" data-tags="file-sync|peer-to-peer|go|security|cross-platform|p2p|synchronization" data-stars="84702" data-forks="5225">
   <div class="card-header">
     <span class="rank-badge">#158</span>
     <div class="card-title-row">
@@ -4393,7 +4592,7 @@ svg { vertical-align: middle; flex-shrink: 0; }
     </div>
   </div>
 </article>
-<article class="repo-card" data-lang="Blade" data-stars7d="" data-rank="159" data-name="laravel/laravel" data-score="115.94">
+<article class="repo-card" data-lang="Blade" data-stars7d="" data-rank="159" data-name="laravel/laravel" data-score="115.94" data-tags="php|framework|web-development|laravel" data-stars="84350" data-forks="24744">
   <div class="card-header">
     <span class="rank-badge">#159</span>
     <div class="card-title-row">
@@ -4418,7 +4617,7 @@ svg { vertical-align: middle; flex-shrink: 0; }
     </div>
   </div>
 </article>
-<article class="repo-card" data-lang="Python" data-stars7d="" data-rank="160" data-name="sherlock-project/sherlock" data-score="115.59">
+<article class="repo-card" data-lang="Python" data-stars7d="" data-rank="160" data-name="sherlock-project/sherlock" data-score="115.59" data-tags="osint|python|cli|cybersecurity|reconnaissance|cti|forensics|hacktoberfest" data-stars="84111" data-forks="9808">
   <div class="card-header">
     <span class="rank-badge">#160</span>
     <div class="card-title-row">
@@ -4443,7 +4642,7 @@ svg { vertical-align: middle; flex-shrink: 0; }
     </div>
   </div>
 </article>
-<article class="repo-card" data-lang="Rust" data-stars7d="" data-rank="161" data-name="zed-industries/zed" data-score="115.44">
+<article class="repo-card" data-lang="Rust" data-stars7d="" data-rank="161" data-name="zed-industries/zed" data-score="115.44" data-tags="rust|code-editor|multiplayer|text-editor|gpui|rust-lang|zed" data-stars="84012" data-forks="8759">
   <div class="card-header">
     <span class="rank-badge">#161</span>
     <div class="card-title-row">
@@ -4468,7 +4667,7 @@ svg { vertical-align: middle; flex-shrink: 0; }
     </div>
   </div>
 </article>
-<article class="repo-card" data-lang="Java" data-stars7d="" data-rank="162" data-name="macrozheng/mall" data-score="115.01">
+<article class="repo-card" data-lang="Java" data-stars7d="" data-rank="162" data-name="macrozheng/mall" data-score="115.01" data-tags="e-commerce|spring-boot|java|docker|full-stack|elasticsearch|elk|mongodb" data-stars="83728" data-forks="29704">
   <div class="card-header">
     <span class="rank-badge">#162</span>
     <div class="card-title-row">
@@ -4493,7 +4692,7 @@ svg { vertical-align: middle; flex-shrink: 0; }
     </div>
   </div>
 </article>
-<article class="repo-card" data-lang="" data-stars7d="" data-rank="163" data-name="kepano/obsidian-skills" data-score="114.78">
+<article class="repo-card" data-lang="" data-stars7d="" data-rank="163" data-name="kepano/obsidian-skills" data-score="114.78" data-tags="obsidian|ai-agents|claude|skills|automation|clawdbot|cli|codex" data-stars="33418" data-forks="2341">
   <div class="card-header">
     <span class="rank-badge">#163</span>
     <div class="card-title-row">
@@ -4518,7 +4717,7 @@ svg { vertical-align: middle; flex-shrink: 0; }
     </div>
   </div>
 </article>
-<article class="repo-card" data-lang="TypeScript" data-stars7d="" data-rank="164" data-name="realworld-apps/realworld" data-score="114.69">
+<article class="repo-card" data-lang="TypeScript" data-stars7d="" data-rank="164" data-name="realworld-apps/realworld" data-score="114.69" data-tags="fullstack|demo-app|education|typescript|api-spec" data-stars="83492" data-forks="7616">
   <div class="card-header">
     <span class="rank-badge">#164</span>
     <div class="card-title-row">
@@ -4543,7 +4742,7 @@ svg { vertical-align: middle; flex-shrink: 0; }
     </div>
   </div>
 </article>
-<article class="repo-card" data-lang="Dart" data-stars7d="" data-rank="165" data-name="localsend/localsend" data-score="112.90">
+<article class="repo-card" data-lang="Dart" data-stars7d="" data-rank="165" data-name="localsend/localsend" data-score="112.90" data-tags="file-sharing|flutter|cross-platform|privacy|local-network|dart|flutter-apps" data-stars="82299" data-forks="4448">
   <div class="card-header">
     <span class="rank-badge">#165</span>
     <div class="card-title-row">
@@ -4568,7 +4767,7 @@ svg { vertical-align: middle; flex-shrink: 0; }
     </div>
   </div>
 </article>
-<article class="repo-card" data-lang="Clojure" data-stars7d="" data-rank="166" data-name="tonsky/FiraCode" data-score="112.16">
+<article class="repo-card" data-lang="Clojure" data-stars7d="" data-rank="166" data-name="tonsky/FiraCode" data-score="112.16" data-tags="font|programming|ligatures|typeface|developer-tools|programming-ligatures" data-stars="81669" data-forks="3187">
   <div class="card-header">
     <span class="rank-badge">#166</span>
     <div class="card-title-row">
@@ -4593,7 +4792,7 @@ svg { vertical-align: middle; flex-shrink: 0; }
     </div>
   </div>
 </article>
-<article class="repo-card" data-lang="" data-stars7d="" data-rank="167" data-name="Developer-Y/cs-video-courses" data-score="112.06">
+<article class="repo-card" data-lang="" data-stars7d="" data-rank="167" data-name="Developer-Y/cs-video-courses" data-score="112.06" data-tags="computer-science|education|video-lectures|courses|learning-resource|algorithms|bioinformatics|computational-biology" data-stars="81624" data-forks="11290">
   <div class="card-header">
     <span class="rank-badge">#167</span>
     <div class="card-title-row">
@@ -4618,7 +4817,7 @@ svg { vertical-align: middle; flex-shrink: 0; }
     </div>
   </div>
 </article>
-<article class="repo-card" data-lang="Python" data-stars7d="" data-rank="168" data-name="infiniflow/ragflow" data-score="111.94">
+<article class="repo-card" data-lang="Python" data-stars7d="" data-rank="168" data-name="infiniflow/ragflow" data-score="111.94" data-tags="rag|llm|ai-agents|python|open-source|agentic-ai|agentic-retrieval|agentic-search" data-stars="81457" data-forks="9338">
   <div class="card-header">
     <span class="rank-badge">#168</span>
     <div class="card-title-row">
@@ -4643,7 +4842,7 @@ svg { vertical-align: middle; flex-shrink: 0; }
     </div>
   </div>
 </article>
-<article class="repo-card" data-lang="Python" data-stars7d="" data-rank="169" data-name="vllm-project/vllm" data-score="111.74">
+<article class="repo-card" data-lang="Python" data-stars7d="" data-rank="169" data-name="vllm-project/vllm" data-score="111.74" data-tags="llm-inference|serving|python|pytorch|cuda|amd|blackwell|deepseek" data-stars="81301" data-forks="17369">
   <div class="card-header">
     <span class="rank-badge">#169</span>
     <div class="card-title-row">
@@ -4668,7 +4867,7 @@ svg { vertical-align: middle; flex-shrink: 0; }
     </div>
   </div>
 </article>
-<article class="repo-card" data-lang="TypeScript" data-stars7d="" data-rank="170" data-name="vitejs/vite" data-score="111.13">
+<article class="repo-card" data-lang="TypeScript" data-stars7d="" data-rank="170" data-name="vitejs/vite" data-score="111.13" data-tags="build-tool|dev-server|frontend|typescript|hmr|vite" data-stars="80859" data-forks="8222">
   <div class="card-header">
     <span class="rank-badge">#170</span>
     <div class="card-title-row">
@@ -4693,7 +4892,7 @@ svg { vertical-align: middle; flex-shrink: 0; }
     </div>
   </div>
 </article>
-<article class="repo-card" data-lang="Java" data-stars7d="" data-rank="171" data-name="spring-projects/spring-boot" data-score="111.00">
+<article class="repo-card" data-lang="Java" data-stars7d="" data-rank="171" data-name="spring-projects/spring-boot" data-score="111.00" data-tags="java|spring-boot|framework|web-development|spring" data-stars="80723" data-forks="41939">
   <div class="card-header">
     <span class="rank-badge">#171</span>
     <div class="card-title-row">
@@ -4718,7 +4917,7 @@ svg { vertical-align: middle; flex-shrink: 0; }
     </div>
   </div>
 </article>
-<article class="repo-card" data-lang="Go" data-stars7d="" data-rank="172" data-name="junegunn/fzf" data-score="110.75">
+<article class="repo-card" data-lang="Go" data-stars7d="" data-rank="172" data-name="junegunn/fzf" data-score="110.75" data-tags="cli|go|fuzzy-finder|terminal|unix|bash|fish|fzf" data-stars="80592" data-forks="2801">
   <div class="card-header">
     <span class="rank-badge">#172</span>
     <div class="card-title-row">
@@ -4743,7 +4942,7 @@ svg { vertical-align: middle; flex-shrink: 0; }
     </div>
   </div>
 </article>
-<article class="repo-card" data-lang="" data-stars7d="" data-rank="173" data-name="Leey21/awesome-ai-research-writing" data-score="110.71">
+<article class="repo-card" data-lang="" data-stars7d="" data-rank="173" data-name="Leey21/awesome-ai-research-writing" data-score="110.71" data-tags="academic-writing|prompt-engineering|ai-tools|research|chinese" data-stars="26059" data-forks="2044">
   <div class="card-header">
     <span class="rank-badge">#173</span>
     <div class="card-title-row">
@@ -4768,7 +4967,7 @@ svg { vertical-align: middle; flex-shrink: 0; }
     </div>
   </div>
 </article>
-<article class="repo-card" data-lang="Python" data-stars7d="" data-rank="174" data-name="TauricResearch/TradingAgents" data-score="110.51">
+<article class="repo-card" data-lang="Python" data-stars7d="" data-rank="174" data-name="TauricResearch/TradingAgents" data-score="110.51" data-tags="python|llm|multi-agent|trading|finance|agent|multiagent" data-stars="80450" data-forks="15665">
   <div class="card-header">
     <span class="rank-badge">#174</span>
     <div class="card-title-row">
@@ -4793,7 +4992,7 @@ svg { vertical-align: middle; flex-shrink: 0; }
     </div>
   </div>
 </article>
-<article class="repo-card" data-lang="TypeScript" data-stars7d="" data-rank="175" data-name="Stirling-Tools/Stirling-PDF" data-score="109.64">
+<article class="repo-card" data-lang="TypeScript" data-stars7d="" data-rank="175" data-name="Stirling-Tools/Stirling-PDF" data-score="109.64" data-tags="pdf-editor|open-source|self-hosted|typescript|java|docker|hacktoberfest|pdf" data-stars="79772" data-forks="6987">
   <div class="card-header">
     <span class="rank-badge">#175</span>
     <div class="card-title-row">
@@ -4818,7 +5017,7 @@ svg { vertical-align: middle; flex-shrink: 0; }
     </div>
   </div>
 </article>
-<article class="repo-card" data-lang="Shell" data-stars7d="" data-rank="176" data-name="tw93/Mole" data-score="109.11">
+<article class="repo-card" data-lang="Shell" data-stars7d="" data-rank="176" data-name="tw93/Mole" data-score="109.11" data-tags="macos|command-line|system-optimization|cleanup-tool|shell|analyzer|appcleaner|clean" data-stars="53724" data-forks="1716">
   <div class="card-header">
     <span class="rank-badge">#176</span>
     <div class="card-title-row">
@@ -4843,7 +5042,7 @@ svg { vertical-align: middle; flex-shrink: 0; }
     </div>
   </div>
 </article>
-<article class="repo-card" data-lang="TypeScript" data-stars7d="" data-rank="177" data-name="hoppscotch/hoppscotch" data-score="109.04">
+<article class="repo-card" data-lang="TypeScript" data-stars7d="" data-rank="177" data-name="hoppscotch/hoppscotch" data-score="109.04" data-tags="api-client|api-testing|rest-client|graphql|developer-tools|api|api-rest|http" data-stars="79339" data-forks="5898">
   <div class="card-header">
     <span class="rank-badge">#177</span>
     <div class="card-title-row">
@@ -4868,7 +5067,7 @@ svg { vertical-align: middle; flex-shrink: 0; }
     </div>
   </div>
 </article>
-<article class="repo-card" data-lang="C" data-stars7d="" data-rank="178" data-name="netdata/netdata" data-score="108.53">
+<article class="repo-card" data-lang="C" data-stars7d="" data-rank="178" data-name="netdata/netdata" data-score="108.53" data-tags="monitoring|observability|devops|real-time-metrics|machine-learning|ai|alerting|cncf" data-stars="78959" data-forks="6445">
   <div class="card-header">
     <span class="rank-badge">#178</span>
     <div class="card-title-row">
@@ -4893,7 +5092,7 @@ svg { vertical-align: middle; flex-shrink: 0; }
     </div>
   </div>
 </article>
-<article class="repo-card" data-lang="Java" data-stars7d="" data-rank="179" data-name="doocs/advanced-java" data-score="108.41">
+<article class="repo-card" data-lang="Java" data-stars7d="" data-rank="179" data-name="doocs/advanced-java" data-score="108.41" data-tags="java|distributed-systems|high-concurrency|interview-guide|backend-engineering|advanced-java|distributed-search-engine|doocs" data-stars="78980" data-forks="19218">
   <div class="card-header">
     <span class="rank-badge">#179</span>
     <div class="card-title-row">
@@ -4918,7 +5117,7 @@ svg { vertical-align: middle; flex-shrink: 0; }
     </div>
   </div>
 </article>
-<article class="repo-card" data-lang="Python" data-stars7d="" data-rank="180" data-name="PaddlePaddle/PaddleOCR" data-score="108.41">
+<article class="repo-card" data-lang="Python" data-stars7d="" data-rank="180" data-name="PaddlePaddle/PaddleOCR" data-score="108.41" data-tags="ocr|document-parsing|python|paddlepaddle|llm-ready|ai4science|chineseocr|document-translation" data-stars="78871" data-forks="10511">
   <div class="card-header">
     <span class="rank-badge">#180</span>
     <div class="card-title-row">
@@ -4943,7 +5142,7 @@ svg { vertical-align: middle; flex-shrink: 0; }
     </div>
   </div>
 </article>
-<article class="repo-card" data-lang="Go" data-stars7d="" data-rank="181" data-name="jesseduffield/lazygit" data-score="108.02">
+<article class="repo-card" data-lang="Go" data-stars7d="" data-rank="181" data-name="jesseduffield/lazygit" data-score="108.02" data-tags="git|terminal-ui|cli|go|developer-tools|terminal" data-stars="78598" data-forks="2852">
   <div class="card-header">
     <span class="rank-badge">#181</span>
     <div class="card-title-row">
@@ -4968,7 +5167,7 @@ svg { vertical-align: middle; flex-shrink: 0; }
     </div>
   </div>
 </article>
-<article class="repo-card" data-lang="Python" data-stars7d="" data-rank="182" data-name="mvanhorn/last30days-skill" data-score="107.30">
+<article class="repo-card" data-lang="Python" data-stars7d="" data-rank="182" data-name="mvanhorn/last30days-skill" data-score="107.30" data-tags="ai-agent|research-tool|multi-source-search|python|claude|ai-prompts|ai-skill|bluesky" data-stars="26745" data-forks="2287">
   <div class="card-header">
     <span class="rank-badge">#182</span>
     <div class="card-title-row">
@@ -4993,7 +5192,7 @@ svg { vertical-align: middle; flex-shrink: 0; }
     </div>
   </div>
 </article>
-<article class="repo-card" data-lang="TypeScript" data-stars7d="" data-rank="183" data-name="lobehub/lobehub" data-score="107.07">
+<article class="repo-card" data-lang="TypeScript" data-stars7d="" data-rank="183" data-name="lobehub/lobehub" data-score="107.07" data-tags="ai-agents|agent-platform|typescript|nextjs|multi-agent-collaboration|agent|agent-collaboration|agent-harness" data-stars="77882" data-forks="15321">
   <div class="card-header">
     <span class="rank-badge">#183</span>
     <div class="card-title-row">
@@ -5018,7 +5217,7 @@ svg { vertical-align: middle; flex-shrink: 0; }
     </div>
   </div>
 </article>
-<article class="repo-card" data-lang="TypeScript" data-stars7d="" data-rank="184" data-name="coder/code-server" data-score="106.88">
+<article class="repo-card" data-lang="TypeScript" data-stars7d="" data-rank="184" data-name="coder/code-server" data-score="106.88" data-tags="vscode|remote-development|browser-ide|typescript|dev-tools|development-environment|ide|remote-work" data-stars="77755" data-forks="6684">
   <div class="card-header">
     <span class="rank-badge">#184</span>
     <div class="card-title-row">
@@ -5043,7 +5242,7 @@ svg { vertical-align: middle; flex-shrink: 0; }
     </div>
   </div>
 </article>
-<article class="repo-card" data-lang="Python" data-stars7d="" data-rank="185" data-name="tensorflow/models" data-score="106.80">
+<article class="repo-card" data-lang="Python" data-stars7d="" data-rank="185" data-name="tensorflow/models" data-score="106.80" data-tags="tensorflow|machine-learning|deep-learning|computer-vision|nlp" data-stars="77662" data-forks="45065">
   <div class="card-header">
     <span class="rank-badge">#185</span>
     <div class="card-title-row">
@@ -5068,7 +5267,7 @@ svg { vertical-align: middle; flex-shrink: 0; }
     </div>
   </div>
 </article>
-<article class="repo-card" data-lang="C" data-stars7d="" data-rank="186" data-name="ventoy/Ventoy" data-score="105.55">
+<article class="repo-card" data-lang="C" data-stars7d="" data-rank="186" data-name="ventoy/Ventoy" data-score="105.55" data-tags="bootable-usb|multiboot|iso-tools|linux|windows|arm64|auto-install|bsd" data-stars="76899" data-forks="4820">
   <div class="card-header">
     <span class="rank-badge">#186</span>
     <div class="card-title-row">
@@ -5093,7 +5292,7 @@ svg { vertical-align: middle; flex-shrink: 0; }
     </div>
   </div>
 </article>
-<article class="repo-card" data-lang="Java" data-stars7d="" data-rank="187" data-name="elastic/elasticsearch" data-score="105.53">
+<article class="repo-card" data-lang="Java" data-stars7d="" data-rank="187" data-name="elastic/elasticsearch" data-score="105.53" data-tags="search-engine|java|distributed-systems|analytics|vector-database|elasticsearch" data-stars="76758" data-forks="25937">
   <div class="card-header">
     <span class="rank-badge">#187</span>
     <div class="card-title-row">
@@ -5118,7 +5317,7 @@ svg { vertical-align: middle; flex-shrink: 0; }
     </div>
   </div>
 </article>
-<article class="repo-card" data-lang="" data-stars7d="" data-rank="188" data-name="awesomedata/awesome-public-datasets" data-score="104.02">
+<article class="repo-card" data-lang="" data-stars7d="" data-rank="188" data-name="awesomedata/awesome-public-datasets" data-score="104.02" data-tags="datasets|open-data|awesome-list|research|data-science|aaron-swartz|awesome-public-datasets|opendata" data-stars="75660" data-forks="11499">
   <div class="card-header">
     <span class="rank-badge">#188</span>
     <div class="card-title-row">
@@ -5143,7 +5342,7 @@ svg { vertical-align: middle; flex-shrink: 0; }
     </div>
   </div>
 </article>
-<article class="repo-card" data-lang="TypeScript" data-stars7d="" data-rank="189" data-name="nestjs/nest" data-score="103.93">
+<article class="repo-card" data-lang="TypeScript" data-stars7d="" data-rank="189" data-name="nestjs/nest" data-score="103.93" data-tags="nodejs-framework|typescript|backend|microservices|enterprise|framework|hacktoberfest|javascript" data-stars="75594" data-forks="8301">
   <div class="card-header">
     <span class="rank-badge">#189</span>
     <div class="card-title-row">
@@ -5168,7 +5367,7 @@ svg { vertical-align: middle; flex-shrink: 0; }
     </div>
   </div>
 </article>
-<article class="repo-card" data-lang="Python" data-stars7d="" data-rank="190" data-name="datawhalechina/hello-agents" data-score="103.75">
+<article class="repo-card" data-lang="Python" data-stars7d="" data-rank="190" data-name="datawhalechina/hello-agents" data-score="103.75" data-tags="agent|llm|tutorial|rag|multi-agent" data-stars="54386" data-forks="6647">
   <div class="card-header">
     <span class="rank-badge">#190</span>
     <div class="card-title-row">
@@ -5193,7 +5392,7 @@ svg { vertical-align: middle; flex-shrink: 0; }
     </div>
   </div>
 </article>
-<article class="repo-card" data-lang="Python" data-stars7d="" data-rank="191" data-name="OpenHands/OpenHands" data-score="103.35">
+<article class="repo-card" data-lang="Python" data-stars7d="" data-rank="191" data-name="OpenHands/OpenHands" data-score="103.35" data-tags="ai-agent|llm|developer-tools|python|automation|agent|artificial-intelligence|chatgpt" data-stars="75179" data-forks="9532">
   <div class="card-header">
     <span class="rank-badge">#191</span>
     <div class="card-title-row">
@@ -5218,7 +5417,7 @@ svg { vertical-align: middle; flex-shrink: 0; }
     </div>
   </div>
 </article>
-<article class="repo-card" data-lang="C" data-stars7d="" data-rank="192" data-name="redis/redis" data-score="102.54">
+<article class="repo-card" data-lang="C" data-stars7d="" data-rank="192" data-name="redis/redis" data-score="102.54" data-tags="cache|database|in-memory|nosql|message-broker|caching|distributed-systems|in-memory-database" data-stars="74574" data-forks="24637">
   <div class="card-header">
     <span class="rank-badge">#192</span>
     <div class="card-title-row">
@@ -5243,7 +5442,7 @@ svg { vertical-align: middle; flex-shrink: 0; }
     </div>
   </div>
 </article>
-<article class="repo-card" data-lang="Rust" data-stars7d="" data-rank="193" data-name="unionlabs/union" data-score="101.77">
+<article class="repo-card" data-lang="Rust" data-stars7d="" data-rank="193" data-name="unionlabs/union" data-score="101.77" data-tags="blockchain|zero-knowledge|cross-chain|defi|rust|astro|cosmos|cosmwasm" data-stars="74030" data-forks="3891">
   <div class="card-header">
     <span class="rank-badge">#193</span>
     <div class="card-title-row">
@@ -5268,7 +5467,7 @@ svg { vertical-align: middle; flex-shrink: 0; }
     </div>
   </div>
 </article>
-<article class="repo-card" data-lang="TypeScript" data-stars7d="" data-rank="194" data-name="grafana/grafana" data-score="101.76">
+<article class="repo-card" data-lang="TypeScript" data-stars7d="" data-rank="194" data-name="grafana/grafana" data-score="101.76" data-tags="data-visualization|monitoring|observability|dashboard|alerting|analytics|business-intelligence|elasticsearch" data-stars="74019" data-forks="13961">
   <div class="card-header">
     <span class="rank-badge">#194</span>
     <div class="card-title-row">
@@ -5293,7 +5492,7 @@ svg { vertical-align: middle; flex-shrink: 0; }
     </div>
   </div>
 </article>
-<article class="repo-card" data-lang="Jupyter Notebook" data-stars7d="" data-rank="195" data-name="openai/openai-cookbook" data-score="101.53">
+<article class="repo-card" data-lang="Jupyter Notebook" data-stars7d="" data-rank="195" data-name="openai/openai-cookbook" data-score="101.53" data-tags="openai-api|gpt-4|chatgpt|jupyter-notebook|python|openai" data-stars="73837" data-forks="12493">
   <div class="card-header">
     <span class="rank-badge">#195</span>
     <div class="card-title-row">
@@ -5318,7 +5517,7 @@ svg { vertical-align: middle; flex-shrink: 0; }
     </div>
   </div>
 </article>
-<article class="repo-card" data-lang="C++" data-stars7d="" data-rank="196" data-name="ocornut/imgui" data-score="101.10">
+<article class="repo-card" data-lang="C++" data-stars7d="" data-rank="196" data-name="ocornut/imgui" data-score="101.10" data-tags="cpp|gui|imgui|immediate-mode|game-development|api|cplusplus|framework" data-stars="73537" data-forks="11779">
   <div class="card-header">
     <span class="rank-badge">#196</span>
     <div class="card-title-row">
@@ -5343,7 +5542,7 @@ svg { vertical-align: middle; flex-shrink: 0; }
     </div>
   </div>
 </article>
-<article class="repo-card" data-lang="" data-stars7d="" data-rank="197" data-name="vuejs/awesome-vue" data-score="101.06">
+<article class="repo-card" data-lang="" data-stars7d="" data-rank="197" data-name="vuejs/awesome-vue" data-score="101.06" data-tags="vue|awesome-list|curated-resources|javascript" data-stars="73583" data-forks="9459">
   <div class="card-header">
     <span class="rank-badge">#197</span>
     <div class="card-title-row">
@@ -5368,7 +5567,7 @@ svg { vertical-align: middle; flex-shrink: 0; }
     </div>
   </div>
 </article>
-<article class="repo-card" data-lang="Rust" data-stars7d="" data-rank="198" data-name="xai-org/x-algorithm" data-score="100.72">
+<article class="repo-card" data-lang="Rust" data-stars7d="" data-rank="198" data-name="xai-org/x-algorithm" data-score="100.72" data-tags="recommendation-system|machine-learning|rust|feed-algorithm|transformer" data-stars="25910" data-forks="4462">
   <div class="card-header">
     <span class="rank-badge">#198</span>
     <div class="card-title-row">
@@ -5393,7 +5592,7 @@ svg { vertical-align: middle; flex-shrink: 0; }
     </div>
   </div>
 </article>
-<article class="repo-card" data-lang="TypeScript" data-stars7d="" data-rank="199" data-name="apache/superset" data-score="100.46">
+<article class="repo-card" data-lang="TypeScript" data-stars7d="" data-rank="199" data-name="apache/superset" data-score="100.46" data-tags="business-intelligence|data-visualization|analytics|python|react|apache|apache-superset|asf" data-stars="73061" data-forks="17396">
   <div class="card-header">
     <span class="rank-badge">#199</span>
     <div class="card-title-row">
@@ -5418,7 +5617,7 @@ svg { vertical-align: middle; flex-shrink: 0; }
     </div>
   </div>
 </article>
-<article class="repo-card" data-lang="Python" data-stars7d="" data-rank="200" data-name="python/cpython" data-score="100.24">
+<article class="repo-card" data-lang="Python" data-stars7d="" data-rank="200" data-name="python/cpython" data-score="100.24" data-tags="python|interpreter|programming-language|cpython" data-stars="72881" data-forks="34675">
   <div class="card-header">
     <span class="rank-badge">#200</span>
     <div class="card-title-row">
@@ -5451,7 +5650,7 @@ svg { vertical-align: middle; flex-shrink: 0; }
   <p>
     Generated by the GitHub Trending Pipeline &mdash;
     <a href="https://github.com" target="_blank" rel="noopener noreferrer">GitHub</a>
-    &bull; Last updated <time>2026-05-29 01:33</time> UTC
+    &bull; Last updated <time>2026-05-29 03:46</time> UTC
   </p>
 </footer>
 
@@ -5459,118 +5658,224 @@ svg { vertical-align: middle; flex-shrink: 0; }
 (function () {
   'use strict';
 
-  var REPOS = [];
   var searchTimer = null;
-  var activeFilters = { lang: '', period: 'all', query: '' };
+  var activeFilters = {
+    lang:     '',
+    period:   'all',
+    query:    '',
+    tags:     new Set(),   // selected tags — OR logic
+    sort:     'trending',  // trending | stars | forks
+    minStars: 0
+  };
+
+  // ---------- utilities ----------
 
   function debounce(fn, ms) {
-    return function() {
-      var args = arguments;
+    return function () {
       clearTimeout(searchTimer);
-      searchTimer = setTimeout(function() { fn.apply(null, args); }, ms);
+      searchTimer = setTimeout(fn, ms);
     };
   }
 
   function stars7dNum(card) {
     var v = card.dataset.stars7d;
-    if (v === '' || v === undefined || v === null) return null;
-    return parseInt(v, 10);
+    return (v === '' || v == null) ? null : parseInt(v, 10);
   }
 
-  function periodMatch(card, period) {
-    if (period === 'all' || period === '30d') return true;
-    var v = stars7dNum(card);
-    if (v === null) return false;
-    if (period === '7d') return v > 0;
-    if (period === '24h') return v > 0;
-    return true;
+  function cardTagList(card) {
+    var v = card.dataset.tags || '';
+    return v ? v.split('|') : [];
   }
+
+  // ---------- per-filter predicates ----------
+
+  function periodOk(card) {
+    var p = activeFilters.period;
+    if (p === 'all' || p === '30d') return true;
+    var v = stars7dNum(card);
+    return v !== null && v > 0;
+  }
+
+  function tagsOk(card) {
+    if (activeFilters.tags.size === 0) return true;
+    var tl = cardTagList(card);
+    for (var i = 0; i < tl.length; i++) {
+      if (activeFilters.tags.has(tl[i])) return true;
+    }
+    return false;
+  }
+
+  function starsOk(card) {
+    if (!activeFilters.minStars) return true;
+    return parseInt(card.dataset.stars || '0', 10) >= activeFilters.minStars;
+  }
+
+  function searchOk(card) {
+    var q = activeFilters.query;
+    if (!q) return true;
+    var desc = card.querySelector('.description');
+    var summ = card.querySelector('.summary');
+    var text = [
+      card.dataset.name || '',
+      desc ? desc.textContent : '',
+      summ ? summ.textContent : '',
+      (card.dataset.tags || '').replace(/\|/g, ' ')
+    ].join(' ').toLowerCase();
+    return text.indexOf(q) !== -1;
+  }
+
+  // ---------- sort comparator ----------
+
+  function compareCards(a, b) {
+    switch (activeFilters.sort) {
+      case 'stars':
+        return parseInt(b.dataset.stars || '0', 10) - parseInt(a.dataset.stars || '0', 10);
+      case 'forks':
+        return parseInt(b.dataset.forks || '0', 10) - parseInt(a.dataset.forks || '0', 10);
+      default: // trending — lower rank number = higher position
+        return parseInt(a.dataset.rank || '9999', 10) - parseInt(b.dataset.rank || '9999', 10);
+    }
+  }
+
+  // ---------- main render ----------
 
   function filterAndRender() {
     var grid = document.getElementById('repo-grid');
-    var cards = Array.prototype.slice.call(grid.querySelectorAll('.repo-card'));
-    var lang   = activeFilters.lang;
-    var period = activeFilters.period;
-    var query  = activeFilters.query.toLowerCase().trim();
+    var allCards = Array.prototype.slice.call(grid.querySelectorAll('.repo-card'));
+    var lang = activeFilters.lang;
+    var visibleCount = 0;
 
-    var visible = 0;
-    cards.forEach(function(card) {
-      // Language filter
-      if (lang && card.dataset.lang !== lang) {
-        card.style.display = 'none'; return;
-      }
-      // Period filter
-      if (!periodMatch(card, period)) {
-        card.style.display = 'none'; return;
-      }
-      // Search filter
-      if (query) {
-        var searchable = [
-          card.dataset.name || '',
-          card.querySelector('.description') ? card.querySelector('.description').textContent : '',
-          card.querySelector('.summary')     ? card.querySelector('.summary').textContent     : '',
-          card.querySelectorAll('.tag').length ? Array.prototype.map.call(card.querySelectorAll('.tag'), function(t){ return t.textContent; }).join(' ') : ''
-        ].join(' ').toLowerCase();
-        if (searchable.indexOf(query) === -1) {
-          card.style.display = 'none'; return;
-        }
-      }
-      card.style.display = '';
-      visible++;
+    // Tag-match each card; store result on element to avoid re-computing during sort
+    allCards.forEach(function (card) {
+      var ok = true;
+      if (lang && card.dataset.lang !== lang) ok = false;
+      if (ok && !periodOk(card))  ok = false;
+      if (ok && !tagsOk(card))    ok = false;
+      if (ok && !starsOk(card))   ok = false;
+      if (ok && !searchOk(card))  ok = false;
+      card._show = ok;
+      if (ok) visibleCount++;
     });
 
-    // Show/hide empty state
-    var existing = grid.querySelector('.empty-state');
-    if (visible === 0) {
-      if (!existing) {
+    // Sort: visible cards by sort key, hidden cards to the end
+    var ordered = allCards.slice().sort(function (a, b) {
+      if (a._show && !b._show) return -1;
+      if (!a._show && b._show) return 1;
+      if (!a._show && !b._show) return 0;
+      return compareCards(a, b);
+    });
+
+    // Re-order DOM and apply visibility in one pass
+    ordered.forEach(function (card) {
+      card.style.display = card._show ? '' : 'none';
+      grid.appendChild(card);
+    });
+
+    // Empty state
+    var emptyEl = grid.querySelector('.empty-state');
+    if (visibleCount === 0) {
+      if (!emptyEl) {
         var el = document.createElement('div');
         el.className = 'empty-state';
-        var h3 = document.createElement('h3');
-        h3.textContent = 'No repositories found';
-        var p = document.createElement('p');
-        p.textContent = 'Try adjusting your filters or search query.';
-        el.appendChild(h3);
-        el.appendChild(p);
+        el.innerHTML = '<h3>No repositories found</h3><p>Try adjusting your filters or search query.</p>';
         grid.appendChild(el);
       }
-    } else {
-      if (existing) existing.remove();
+    } else if (emptyEl) {
+      emptyEl.remove();
     }
 
-    // Update visible count
     var countEl = document.getElementById('filter-count');
-    if (countEl) countEl.textContent = 'Showing ' + visible + ' of ' + cards.length + ' repos';
+    if (countEl) countEl.textContent = 'Showing ' + visibleCount + ' of ' + allCards.length + ' repos';
   }
+
+  // ---------- tag toggle ----------
+
+  function syncTagPills() {
+    document.querySelectorAll('.tag-pill[data-tag]').forEach(function (pill) {
+      pill.classList.toggle('active', activeFilters.tags.has(pill.dataset.tag));
+    });
+    // Sync tag spans inside cards
+    document.querySelectorAll('.repo-card .tag').forEach(function (span) {
+      span.classList.toggle('tag-active', activeFilters.tags.has(span.textContent.trim()));
+    });
+    var clearBtn = document.getElementById('clear-tags');
+    if (clearBtn) clearBtn.style.display = activeFilters.tags.size > 0 ? '' : 'none';
+  }
+
+  function toggleTag(tag) {
+    if (activeFilters.tags.has(tag)) {
+      activeFilters.tags.delete(tag);
+    } else {
+      activeFilters.tags.add(tag);
+    }
+    syncTagPills();
+    filterAndRender();
+  }
+
+  function clearTags() {
+    activeFilters.tags.clear();
+    syncTagPills();
+    filterAndRender();
+  }
+
+  // ---------- init ----------
 
   function init() {
     var searchEl = document.getElementById('search-input');
     var langEl   = document.getElementById('lang-select');
+    var sortEl   = document.getElementById('sort-select');
+    var starsEl  = document.getElementById('stars-select');
+    var clearBtn = document.getElementById('clear-tags');
     var periods  = document.querySelectorAll('input[name="period"]');
 
     if (searchEl) {
-      searchEl.addEventListener('input', debounce(function() {
-        activeFilters.query = searchEl.value;
+      searchEl.addEventListener('input', debounce(function () {
+        activeFilters.query = searchEl.value.toLowerCase().trim();
         filterAndRender();
       }, 200));
     }
-
     if (langEl) {
-      langEl.addEventListener('change', function() {
+      langEl.addEventListener('change', function () {
         activeFilters.lang = langEl.value;
         filterAndRender();
       });
     }
+    if (sortEl) {
+      sortEl.addEventListener('change', function () {
+        activeFilters.sort = sortEl.value;
+        filterAndRender();
+      });
+    }
+    if (starsEl) {
+      starsEl.addEventListener('change', function () {
+        activeFilters.minStars = parseInt(starsEl.value, 10) || 0;
+        filterAndRender();
+      });
+    }
+    periods.forEach(function (radio) {
+      radio.addEventListener('change', function () {
+        if (radio.checked) { activeFilters.period = radio.value; filterAndRender(); }
+      });
+    });
+    if (clearBtn) {
+      clearBtn.addEventListener('click', clearTags);
+    }
 
-    periods.forEach(function(radio) {
-      radio.addEventListener('change', function() {
-        if (radio.checked) {
-          activeFilters.period = radio.value;
-          filterAndRender();
-        }
+    // Tag cloud pills
+    document.querySelectorAll('.tag-pill[data-tag]').forEach(function (pill) {
+      pill.addEventListener('click', function () { toggleTag(pill.dataset.tag); });
+    });
+
+    // Tags inside cards are also clickable
+    document.querySelectorAll('.repo-card .tag').forEach(function (span) {
+      span.title = 'Filter by “' + span.textContent.trim() + '”';
+      span.addEventListener('click', function () {
+        toggleTag(span.textContent.trim());
+        var cloud = document.getElementById('tag-cloud');
+        if (cloud) cloud.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
       });
     });
 
-    // Initial count
     filterAndRender();
   }
 
