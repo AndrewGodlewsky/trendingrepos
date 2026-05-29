@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-16"?>
+<Task version="1.4" xmlns="http://schemas.microsoft.com/windows/2004/02/mit/task">
+  <RegistrationInfo>
+    <Date>2026-01-01T00:00:00</Date>
+    <Author>GitHub Trending Pipeline</Author>
+    <Description>GitHub Trending Repos Pipeline — daily automated run. Fetches trending repositories from the GitHub Search API, ranks them by composite trending score, generates AI summaries via Claude, and publishes a static website to docs/ (GitHub Pages / Cloudflare Pages compatible). Import via: schtasks /create /xml github-trending-task.xml /tn "GitHub Trending Repos Pipeline"</Description>
+    <URI>\GitHub Trending Repos Pipeline</URI>
+  </RegistrationInfo>
+  <Triggers>
+    <CalendarTrigger>
+      <!-- Runs at 06:00 AM daily. Adjust StartBoundary date to tomorrow's date. -->
+      <StartBoundary>2026-01-01T06:00:00</StartBoundary>
+      <Enabled>true</Enabled>
+      <ScheduleByDay>
+        <DaysInterval>1</DaysInterval>
+      </ScheduleByDay>
+    </CalendarTrigger>
+  </Triggers>
+  <Principals>
+    <Principal id="Author">
+      <!--
+        To run as the current user (interactive logon required):
+          Remove the UserId line and set LogonType to InteractiveToken.
+        To run whether logged on or not (requires password at import time):
+          Keep UserId as your SID or username and set LogonType to Password.
+        To run as SYSTEM (no password needed, use with caution):
+          Set UserId to S-1-5-18 and LogonType to ServiceAccount.
+      -->
+      <UserId>S-1-5-18</UserId>
+      <RunLevel>HighestAvailable</RunLevel>
+    </Principal>
+  </Principals>
+  <Settings>
+    <MultipleInstancesPolicy>IgnoreNew</MultipleInstancesPolicy>
+    <DisallowStartIfOnBatteries>false</DisallowStartIfOnBatteries>
+    <StopIfGoingOnBatteries>false</StopIfGoingOnBatteries>
+    <AllowHardTerminate>true</AllowHardTerminate>
+    <!-- Run ASAP if the scheduled start was missed (e.g. machine was off) -->
+    <StartWhenAvailable>true</StartWhenAvailable>
+    <RunOnlyIfNetworkAvailable>true</RunOnlyIfNetworkAvailable>
+    <IdleSettings>
+      <StopOnIdleEnd>false</StopOnIdleEnd>
+      <RestartOnIdle>false</RestartOnIdle>
+    </IdleSettings>
+    <AllowStartOnDemand>true</AllowStartOnDemand>
+    <Enabled>true</Enabled>
+    <Hidden>false</Hidden>
+    <RunOnlyIfIdle>false</RunOnlyIfIdle>
+    <DisallowStartOnRemoteAppSession>false</DisallowStartOnRemoteAppSession>
+    <UseUnifiedSchedulingEngine>true</UseUnifiedSchedulingEngine>
+    <WakeToRun>false</WakeToRun>
+    <!-- 1-hour hard timeout -->
+    <ExecutionTimeLimit>PT1H</ExecutionTimeLimit>
+    <Priority>7</Priority>
+    <!-- Restart up to 3 times on failure, waiting 5 minutes between attempts -->
+    <RestartOnFailure>
+      <Interval>PT5M</Interval>
+      <Count>3</Count>
+    </RestartOnFailure>
+  </Settings>
+  <Actions Context="Author">
+    <Exec>
+      <!--
+        Update <Command> to the full path of your Python executable.
+        Find it by running:  where python   (or: py -c "import sys; print(sys.executable)")
+      -->
+      <Command>A:\Claude\workflow test\.venv\Scripts\python.exe</Command>
+      <Arguments>"A:\Claude\workflow test\run_pipeline.py"</Arguments>
+      <WorkingDirectory>A:\Claude\workflow test</WorkingDirectory>
+    </Exec>
+  </Actions>
+</Task>

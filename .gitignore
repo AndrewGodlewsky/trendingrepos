@@ -1,0 +1,42 @@
+# Secrets — never commit
+.env
+
+# Local dev tooling
+.claude/
+
+# Pipeline data outputs
+data/*.json
+data/*.tmp
+
+# SQLite DB — contains full history; commit it if you want to preserve history
+# across machines, or leave it gitignored to keep the repo lightweight.
+# Uncomment the line below to track it:
+# !data/trending.db
+data/trending.db
+
+# Log files
+logs/
+
+# Python bytecache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Test cache
+.pytest_cache/
+
+# Virtual environments
+venv/
+.venv/
+env/
+.env/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# docs/data.json is generated — not tracked
+docs/data.json
+
+# docs/index.html is intentionally tracked for GitHub Pages / Cloudflare Pages
