@@ -773,13 +773,20 @@ def _build_inline_js() -> str:
   function periodOk(card) {
     var p = activeFilters.period;
     if (p === 'all') return true;
-    var attr = p === '24h' ? card.dataset.stars24h
-             : p === '7d'  ? card.dataset.stars7d
-             : p === '30d' ? card.dataset.stars30d
-             : null;
-    // If we have no data for this window, still show the repo (don't hide it)
-    if (attr === '' || attr == null) return true;
-    return parseInt(attr, 10) > 0;
+
+    var gained, threshold;
+    if (p === '24h') { gained = card.dataset.stars24h; threshold = 0.30; }
+    else if (p === '7d')  { gained = card.dataset.stars7d;  threshold = 0.60; }
+    else if (p === '30d') { gained = card.dataset.stars30d; threshold = 1.20; }
+    else return true;
+
+    // No historical data for this window yet — show the repo rather than hiding it
+    if (gained === '' || gained == null) return true;
+
+    var total = parseInt(card.dataset.stars || '0', 10);
+    if (total === 0) return true; // avoid division by zero on brand-new repos
+
+    return (parseInt(gained, 10) / total) >= threshold;
   }
 
   function updateDeltaBadges(period) {
