@@ -490,8 +490,8 @@ code {
       </span>
       Data Storage
     </h2>
-    <p>All results are stored in a <strong>SQLite database</strong> at <code>data/trending.db</code>. The database accumulates every daily snapshot, so historical data is preserved across runs.</p>
-    <p>This enables the pipeline to compute <strong>star-growth deltas</strong> over time (e.g. stars gained in the last 7 days) by diffing successive snapshots — the data behind the "7-day growth" stat shown on each repository card.</p>
+    <p>All results are stored in a <strong>SQLite database</strong> at <code>data/trending.db</code>. The database accumulates every daily snapshot, so historical data is preserved across runs. The database is seeded with <strong>16 days of historical snapshots</strong> (over 1.5 million rows) giving the period filters meaningful baseline data from day one.</p>
+    <p>This enables the pipeline to compute <strong>star-growth deltas</strong> over multiple time windows by diffing successive snapshots — the data behind the 24h, 7-day, and 30-day growth stats shown on each repository card and used by the period filter thresholds.</p>
   </section>
 
   <!-- 6. Filters explained -->
@@ -511,7 +511,38 @@ code {
         <span><span class="filter-label">Language</span> — Filter by GitHub's detected primary programming language for the repository.</span>
       </li>
       <li>
-        <span><span class="filter-label">Time period</span> — Restrict results to repos that have shown star growth within a selected window (e.g. last 24 h, 7 days, 30 days).</span>
+        <span><span class="filter-label">Time period</span> — Restricts results to repos that have crossed a minimum star-growth threshold within the selected window. Each period uses a percentage of the repo's total star count as the bar:</span>
+      </li>
+    </ul>
+    <table class="signals-table" style="margin-top:0.5rem;margin-bottom:0.75rem;" aria-label="Period filter thresholds">
+      <thead>
+        <tr>
+          <th>Period</th>
+          <th>Threshold</th>
+          <th>What it means</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="signal-name">24 hours</td>
+          <td class="signal-weight">≥ 30%</td>
+          <td>Gained at least 30% of its total star count in a single day — a genuine viral spike.</td>
+        </tr>
+        <tr>
+          <td class="signal-name">7 days</td>
+          <td class="signal-weight">≥ 60%</td>
+          <td>Gained at least 60% of its total star count over the past week — sustained rapid growth.</td>
+        </tr>
+        <tr>
+          <td class="signal-name">30 days</td>
+          <td class="signal-weight">≥ 120%</td>
+          <td>Gained more stars in a single month than its entire prior history — explosive breakout growth.</td>
+        </tr>
+      </tbody>
+    </table>
+    <ul class="filter-list" style="margin-top:0;">
+      <li>
+        <span style="font-size:0.85rem;color:var(--text-muted);">Repos with no historical data for a given window are always shown rather than hidden. The "All" option displays every repo regardless of growth rate.</span>
       </li>
       <li>
         <span><span class="filter-label">Sort</span> — Order by <em>Trending</em> (composite score), <em>Most Stars</em>, or <em>Most Forks</em>.</span>
