@@ -15,7 +15,7 @@ import html
 import json
 import logging
 from collections import Counter
-from datetime import datetime, timezone
+from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
@@ -156,7 +156,9 @@ def _build_card(repo: dict) -> str:
     watchers = int(repo.get("watchers") or 0)
     rank = int(repo.get("rank") or 0)
     trending_score = float(repo.get("trending_score") or 0.0)
+    stars_24h = repo.get("stars_24h")
     stars_7d = repo.get("stars_7d")
+    stars_30d = repo.get("stars_30d")
     summary_text = html.escape(repo.get("summary") or "")
     tags: List[str] = repo.get("tags") or []
     topics: List[str] = repo.get("topics") or []
@@ -189,17 +191,17 @@ def _build_card(repo: dict) -> str:
             f'{lang_escaped}</span>'
         )
 
-    delta_badge = _stars_delta_badge(stars_7d)
-
-    # stars_7d as data attr (empty string when null so JS comparison works)
-    stars_7d_attr = str(stars_7d) if stars_7d is not None else ""
+    # data attrs for each period (empty string when null so JS comparison works)
+    stars_24h_attr = str(stars_24h) if stars_24h is not None else ""
+    stars_7d_attr  = str(stars_7d)  if stars_7d  is not None else ""
+    stars_30d_attr = str(stars_30d) if stars_30d is not None else ""
 
     summary_section = ""
     if summary_text:
         summary_section = f'<p class="summary">{summary_text}</p>'
 
     tags_pipe = html.escape("|".join(all_tags))
-    return f"""<article class="repo-card" data-lang="{lang_escaped}" data-stars7d="{stars_7d_attr}" data-rank="{rank}" data-name="{full_name}" data-score="{trending_score:.2f}" data-tags="{tags_pipe}" data-stars="{stars}" data-forks="{forks}">
+    return f"""<article class="repo-card" data-lang="{lang_escaped}" data-stars24h="{stars_24h_attr}" data-stars7d="{stars_7d_attr}" data-stars30d="{stars_30d_attr}" data-rank="{rank}" data-name="{full_name}" data-score="{trending_score:.2f}" data-tags="{tags_pipe}" data-stars="{stars}" data-forks="{forks}">
   <div class="card-header">
     <span class="rank-badge">#{rank}</span>
     <div class="card-title-row">
@@ -219,7 +221,7 @@ def _build_card(repo: dict) -> str:
       {f'<span class="stat lang-stat">{lang_badge}</span>' if lang_badge else ''}
     </div>
     <div class="card-actions">
-      {delta_badge}
+      <div class="delta-badge-container"></div>
       <a href="{html_url}" class="btn-github" target="_blank" rel="noopener noreferrer">{SVG_GITHUB} View on GitHub</a>
     </div>
   </div>
@@ -291,6 +293,25 @@ svg { vertical-align: middle; flex-shrink: 0; }
   white-space: nowrap;
 }
 .site-logo svg { color: var(--accent); }
+.header-nav {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.header-nav-link {
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: var(--text-muted);
+  text-decoration: none;
+  padding: 0.2rem 0.5rem;
+  border-radius: var(--radius-sm);
+  transition: color var(--transition), background var(--transition);
+}
+.header-nav-link:hover {
+  color: var(--text);
+  background: rgba(255,255,255,0.06);
+  text-decoration: none;
+}
 .header-meta {
   margin-left: auto;
   display: flex;
@@ -736,9 +757,10 @@ def _build_inline_js() -> str:
     };
   }
 
-  function stars7dNum(card) {
-    var v = card.dataset.stars7d;
-    return (v === '' || v == null) ? null : parseInt(v, 10);
+  function fmtNum(n) {
+    if (Math.abs(n) >= 1000000) return (n/1000000).toFixed(1) + 'M';
+    if (Math.abs(n) >= 1000) return (n/1000).toFixed(1) + 'k';
+    return String(n);
   }
 
   function cardTagList(card) {
@@ -750,9 +772,33 @@ def _build_inline_js() -> str:
 
   function periodOk(card) {
     var p = activeFilters.period;
-    if (p === 'all' || p === '30d') return true;
-    var v = stars7dNum(card);
-    return v !== null && v > 0;
+    if (p === 'all') return true;
+    var attr = p === '24h' ? card.dataset.stars24h
+             : p === '7d'  ? card.dataset.stars7d
+             : p === '30d' ? card.dataset.stars30d
+             : null;
+    // If we have no data for this window, still show the repo (don't hide it)
+    if (attr === '' || attr == null) return true;
+    return parseInt(attr, 10) > 0;
+  }
+
+  function updateDeltaBadges(period) {
+    document.querySelectorAll('.repo-card').forEach(function (card) {
+      var container = card.querySelector('.delta-badge-container');
+      if (!container) return;
+
+      var attr = period === '24h' ? card.dataset.stars24h
+               : period === '7d'  ? card.dataset.stars7d
+               : period === '30d' ? card.dataset.stars30d
+               : card.dataset.stars24h; // 'all' -> show 24h as default
+
+      if (attr === '' || attr == null) { container.innerHTML = ''; return; }
+      var n = parseInt(attr, 10);
+      var sign = n >= 0 ? '+' : '';
+      var cls = n >= 0 ? 'delta-pos' : 'delta-neg';
+      var label = period === 'all' ? '24h' : period;
+      container.innerHTML = '<span class="delta ' + cls + '">' + sign + fmtNum(n) + ' ' + label + '</span>';
+    });
   }
 
   function tagsOk(card) {
@@ -845,6 +891,8 @@ def _build_inline_js() -> str:
 
     var countEl = document.getElementById('filter-count');
     if (countEl) countEl.textContent = 'Showing ' + visibleCount + ' of ' + allCards.length + ' repos';
+
+    updateDeltaBadges(activeFilters.period);
   }
 
   // ---------- tag toggle ----------
@@ -913,7 +961,11 @@ def _build_inline_js() -> str:
     }
     periods.forEach(function (radio) {
       radio.addEventListener('change', function () {
-        if (radio.checked) { activeFilters.period = radio.value; filterAndRender(); }
+        if (radio.checked) {
+          activeFilters.period = radio.value;
+          filterAndRender();
+          updateDeltaBadges(activeFilters.period);
+        }
       });
     });
     if (clearBtn) {
@@ -1079,6 +1131,9 @@ def _render_html(
       {logo_svg}
       <span>{html.escape(title)}</span>
     </div>
+    <nav class="header-nav">
+      <a href="about.html" class="header-nav-link">About</a>
+    </nav>
     <div class="header-meta">
       <span>Updated <time id="last-updated">{html.escape(generated_at)}</time> UTC</span>
       <span class="repo-count-badge" id="repo-count">{repo_count} repos</span>
@@ -1205,6 +1260,35 @@ def generate(cfg: dict) -> int:
     # Enrich repos with summary data
     # ------------------------------------------------------------------
     enriched = _enrich_repos(repos, summaries)
+
+    # ------------------------------------------------------------------
+    # Compute multi-period star deltas from historical snapshots
+    # ------------------------------------------------------------------
+    for repo in enriched:
+        gid = repo.get("github_id")
+        if not gid:
+            repo["stars_24h"] = None
+            repo["stars_7d"] = None
+            repo["stars_30d"] = None
+            continue
+
+        history = storage.get_history(data_dir, int(gid), days=31)
+        current_stars = repo.get("stars", 0)
+
+        # Build a lookup: run_date -> stars
+        stars_by_date = {h["run_date"]: h["stars"] for h in history}
+
+        def delta_n_days(n, _stars_by_date=stars_by_date, _current=current_stars):
+            # Look for the snapshot closest to n days ago (allow up to +2 day tolerance)
+            for offset in range(n, n + 3):
+                d = (date.today() - timedelta(days=offset)).isoformat()
+                if d in _stars_by_date:
+                    return _current - _stars_by_date[d]
+            return None
+
+        repo["stars_24h"] = delta_n_days(1)
+        repo["stars_7d"]  = delta_n_days(7)
+        repo["stars_30d"] = delta_n_days(30)
 
     # Sort by rank ascending (rank 1 = most trending first)
     enriched.sort(key=lambda r: int(r.get("rank") or 9999))

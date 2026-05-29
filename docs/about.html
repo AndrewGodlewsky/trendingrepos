@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="How the GitHub Trending pipeline works — data collection, scoring formula, AI summaries, and update schedule.">
+  <title>About — GitHub Trending</title>
+  <style>
+/* ===== CSS Custom Properties (Dark GitHub-inspired theme) ===== */
+:root {
+  --bg:         #0d1117;
+  --surface:    #161b22;
+  --surface-2:  #1c2230;
+  --border:     #30363d;
+  --text:       #c9d1d9;
+  --text-muted: #8b949e;
+  --accent:     #58a6ff;
+  --accent-dim: #1f6feb33;
+  --green:      #3fb950;
+  --yellow:     #d29922;
+  --radius:     8px;
+  --radius-sm:  4px;
+  --shadow:     0 4px 16px rgba(0,0,0,0.4);
+  --transition: 0.18s ease;
+  font-size: 16px;
+}
+
+/* ===== Reset & Base ===== */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans', Helvetica, Arial, sans-serif;
+  line-height: 1.6;
+  min-height: 100vh;
+  padding-bottom: 4rem;
+}
+a { color: var(--accent); text-decoration: none; }
+a:hover { text-decoration: underline; }
+svg { vertical-align: middle; flex-shrink: 0; }
+
+/* ===== Header ===== */
+.site-header {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  backdrop-filter: blur(8px);
+}
+.header-inner {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0.85rem 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 1.2rem;
+  flex-wrap: wrap;
+}
+.site-logo {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--text);
+  white-space: nowrap;
+  text-decoration: none;
+}
+.site-logo:hover { text-decoration: none; }
+.site-logo svg { color: var(--accent); }
+.header-back {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.875rem;
+  color: var(--accent);
+  white-space: nowrap;
+  transition: opacity var(--transition);
+}
+.header-back:hover { opacity: 0.8; text-decoration: underline; }
+
+/* ===== Page Layout ===== */
+.page-content {
+  max-width: 860px;
+  margin: 2.5rem auto;
+  padding: 0 1.5rem;
+}
+
+/* ===== Hero ===== */
+.page-hero {
+  margin-bottom: 2.5rem;
+}
+.page-hero h1 {
+  font-size: 1.9rem;
+  font-weight: 700;
+  line-height: 1.25;
+  margin-bottom: 0.6rem;
+  color: var(--text);
+}
+.page-hero .subtitle {
+  font-size: 1rem;
+  color: var(--text-muted);
+  max-width: 640px;
+}
+
+/* ===== Sections ===== */
+.about-section {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1.6rem 1.75rem;
+  margin-bottom: 1.5rem;
+}
+.about-section + .about-section {
+  /* space already handled by margin-bottom */
+}
+.section-heading {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 1rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid var(--border);
+}
+.section-heading .icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  background: var(--accent-dim);
+  border-radius: var(--radius-sm);
+  color: var(--accent);
+  flex-shrink: 0;
+}
+.about-section p {
+  font-size: 0.925rem;
+  color: var(--text-muted);
+  line-height: 1.7;
+  margin-bottom: 0.85rem;
+}
+.about-section p:last-child { margin-bottom: 0; }
+
+/* ===== Score formula block ===== */
+.formula-block {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 0.85rem 1.1rem;
+  margin: 1rem 0;
+  font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+  font-size: 0.82rem;
+  color: var(--accent);
+  overflow-x: auto;
+  white-space: pre;
+  line-height: 1.5;
+}
+
+/* ===== Signal table ===== */
+.signals-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+  margin-top: 1rem;
+}
+.signals-table th {
+  text-align: left;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 0.45rem 0.75rem;
+  border-bottom: 1px solid var(--border);
+}
+.signals-table td {
+  padding: 0.6rem 0.75rem;
+  border-bottom: 1px solid var(--border);
+  vertical-align: top;
+  color: var(--text-muted);
+  line-height: 1.55;
+}
+.signals-table tr:last-child td { border-bottom: none; }
+.signals-table tr:hover td { background: var(--surface-2); }
+.signal-name {
+  color: var(--text);
+  font-weight: 600;
+  white-space: nowrap;
+}
+.signal-weight {
+  font-family: 'SFMono-Regular', Consolas, monospace;
+  font-size: 0.82rem;
+  color: var(--accent);
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+/* ===== Filter list ===== */
+.filter-list {
+  list-style: none;
+  margin-top: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.filter-list li {
+  display: flex;
+  gap: 0.6rem;
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  line-height: 1.55;
+}
+.filter-list li::before {
+  content: '';
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  background: var(--accent);
+  border-radius: 50%;
+  margin-top: 0.5rem;
+  flex-shrink: 0;
+}
+.filter-label {
+  color: var(--text);
+  font-weight: 600;
+  margin-right: 0.15rem;
+}
+
+/* ===== Inline code ===== */
+code {
+  font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+  font-size: 0.82em;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  padding: 0.1em 0.35em;
+  color: var(--accent);
+}
+
+/* ===== Pipeline steps ===== */
+.pipeline-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  margin-top: 1rem;
+  position: relative;
+}
+.pipeline-steps::before {
+  content: '';
+  position: absolute;
+  left: 14px;
+  top: 28px;
+  bottom: 14px;
+  width: 2px;
+  background: var(--border);
+}
+.pipeline-step {
+  display: flex;
+  gap: 1rem;
+  align-items: flex-start;
+  position: relative;
+  padding-bottom: 1.1rem;
+}
+.pipeline-step:last-child { padding-bottom: 0; }
+.step-num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: var(--accent-dim);
+  border: 2px solid var(--accent);
+  color: var(--accent);
+  font-size: 0.78rem;
+  font-weight: 700;
+  flex-shrink: 0;
+  position: relative;
+  z-index: 1;
+}
+.step-body {
+  padding-top: 0.3rem;
+}
+.step-title {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 0.2rem;
+}
+.step-desc {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  line-height: 1.55;
+}
+
+/* ===== Footer ===== */
+.site-footer {
+  margin-top: 3rem;
+  border-top: 1px solid var(--border);
+  padding: 1.5rem;
+  text-align: center;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+.site-footer a { color: var(--text-muted); }
+.site-footer a:hover { color: var(--accent); }
+
+/* ===== Scrollbar ===== */
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+
+/* ===== Responsive ===== */
+@media (max-width: 600px) {
+  .page-hero h1 { font-size: 1.45rem; }
+  .about-section { padding: 1.2rem 1.1rem; }
+  .signals-table th, .signals-table td { padding: 0.45rem 0.5rem; }
+  .formula-block { font-size: 0.72rem; }
+}
+  </style>
+</head>
+<body>
+
+<!-- ===== Site Header ===== -->
+<header class="site-header">
+  <div class="header-inner">
+    <a href="index.html" class="site-logo">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="28" height="28" fill="currentColor" aria-hidden="true"><path d="M12 0C5.374 0 0 5.373 0 12c0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23A11.509 11.509 0 0 1 12 5.803c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576C20.566 21.797 24 17.3 24 12c0-6.627-5.373-12-12-12z"/></svg>
+      <span>GitHub Trending</span>
+    </a>
+    <a href="index.html" class="header-back" aria-label="Back to trending repos">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" width="14" height="14" fill="currentColor" aria-hidden="true"><path d="M7.78 12.53a.75.75 0 0 1-1.06 0L2.47 8.28a.75.75 0 0 1 0-1.06l4.25-4.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042L4.81 7h7.44a.75.75 0 0 1 0 1.5H4.81l2.97 2.97a.75.75 0 0 1 0 1.06Z"/></svg>
+      Back to Trending
+    </a>
+  </div>
+</header>
+
+<!-- ===== Page Content ===== -->
+<main class="page-content" id="main-content">
+
+  <div class="page-hero">
+    <h1>How GitHub Trending Works</h1>
+    <p class="subtitle">A daily pipeline that collects, scores, and summarises rising GitHub repositories — fully automated and open-source.</p>
+  </div>
+
+  <!-- 1. How repos are collected -->
+  <section class="about-section" aria-labelledby="section-collection">
+    <h2 class="section-heading" id="section-collection">
+      <span class="icon" aria-hidden="true">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" width="16" height="16" fill="currentColor"><path d="M8 0a8 8 0 1 1 0 16A8 8 0 0 1 8 0ZM1.5 8a6.5 6.5 0 1 0 13 0 6.5 6.5 0 0 0-13 0Zm7-3.25v2.992l2.028.812a.75.75 0 0 1-.557 1.392l-2.5-1A.751.751 0 0 1 7 8.25v-3.5a.75.75 0 0 1 1.5 0Z"/></svg>
+      </span>
+      Data Collection
+    </h2>
+    <p>Each day the pipeline calls the <strong>GitHub Search API</strong> to discover repositories that have been actively pushed within the <strong>last 30 days</strong> and have accumulated <strong>at least 50 stars</strong>. Up to <strong>200 repositories</strong> are collected per run.</p>
+    <p>Results are paginated and deduplicated by GitHub repository ID before being passed to the ranker. If the API returns the same repository on multiple pages (which can happen at page boundaries), only the entry with the higher star count is kept.</p>
+  </section>
+
+  <!-- 2. Trending score formula -->
+  <section class="about-section" aria-labelledby="section-scoring">
+    <h2 class="section-heading" id="section-scoring">
+      <span class="icon" aria-hidden="true">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" width="16" height="16" fill="currentColor"><path d="M7.996 2a.75.75 0 0 1 .75.75V6.5h3.75a.75.75 0 0 1 0 1.5H8.246l-.001 4.252a.75.75 0 0 1-1.5-.001L6.746 8H3a.75.75 0 0 1 0-1.5h3.746V2.75a.75.75 0 0 1 .75-.75Z"/><path d="M.25 8a7.75 7.75 0 1 1 15.5 0A7.75 7.75 0 0 1 .25 8Zm7.75-6.25a6.25 6.25 0 1 0 0 12.5 6.25 6.25 0 0 0 0-12.5Z"/></svg>
+      </span>
+      The Trending Score Formula
+    </h2>
+    <p>Repositories are ranked by a <strong>composite trending score</strong> that blends five signals. The goal is to surface repos that are genuinely gaining momentum right now — not just the all-time most-starred projects.</p>
+
+    <div class="formula-block" role="img" aria-label="Composite score formula">score = star_velocity × 0.50
+      + fork_ratio    × 0.15
+      + watcher_ratio × 0.10
+      + recency_bonus × 0.20
+      + issue_health  × 0.05</div>
+
+    <table class="signals-table" aria-label="Score signal definitions">
+      <thead>
+        <tr>
+          <th>Signal</th>
+          <th>Weight</th>
+          <th>What it measures</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="signal-name">Star Velocity</td>
+          <td class="signal-weight">50%</td>
+          <td>Stars divided by the repo's age in days (capped at 365). A repo accumulating stars quickly relative to its age scores higher — this is the dominant signal.</td>
+        </tr>
+        <tr>
+          <td class="signal-name">Fork Ratio</td>
+          <td class="signal-weight">15%</td>
+          <td>Forks ÷ stars. Reflects how often people actually build on the code, not just bookmark it with a star.</td>
+        </tr>
+        <tr>
+          <td class="signal-name">Watcher Ratio</td>
+          <td class="signal-weight">10%</td>
+          <td>Watchers ÷ stars. Sustained community interest: people who opt-in to receive notifications indicate deeper engagement than a passive star.</td>
+        </tr>
+        <tr>
+          <td class="signal-name">Recency Bonus</td>
+          <td class="signal-weight">20%</td>
+          <td>Linear decay from 1.0 → 0.0 over the 30 days since the repo's last push. Rewards actively maintained projects and penalises abandoned ones.</td>
+        </tr>
+        <tr>
+          <td class="signal-name">Issue Health</td>
+          <td class="signal-weight">5%</td>
+          <td>
+            Calculated as <code>1 / (1 + (open_issues / stars) × 10)</code>. Penalises repos drowning in unresolved issues relative to their community size.
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- 3. AI Summaries -->
+  <section class="about-section" aria-labelledby="section-ai">
+    <h2 class="section-heading" id="section-ai">
+      <span class="icon" aria-hidden="true">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" width="16" height="16" fill="currentColor"><path d="M0 1.75A.75.75 0 0 1 .75 1h4.253c1.227 0 2.317.59 3 1.501A3.743 3.743 0 0 1 11.006 1h4.245a.75.75 0 0 1 .75.75v10.5a.75.75 0 0 1-.75.75h-4.507a2.25 2.25 0 0 0-1.591.659l-.622.621a.75.75 0 0 1-1.06 0l-.622-.621A2.25 2.25 0 0 0 5.258 13H.75a.75.75 0 0 1-.75-.75Zm7.251 10.324.004-5.073-.002-2.253A2.25 2.25 0 0 0 5.003 2.5H1.5v9h3.757a3.75 3.75 0 0 1 1.994.574ZM8.755 4.75l-.004 7.322a3.752 3.752 0 0 1 1.992-.572H14.5v-9h-3.495a2.25 2.25 0 0 0-2.25 2.25Z"/></svg>
+      </span>
+      AI-Generated Summaries
+    </h2>
+    <p>For each repository the pipeline fetches the <strong>README</strong>, the top-level <strong>file tree</strong>, key config files (e.g. <code>package.json</code>, <code>pyproject.toml</code>, <code>Cargo.toml</code>), and the primary entry-point source file. This context is sent to <strong>Claude (Haiku model by default)</strong> to generate:</p>
+    <ul class="filter-list" style="margin-top:0.4rem;">
+      <li><span><span class="filter-label">Summary</span> — A concise 2–4 sentence plain-English description of what the repo does and why it is interesting.</span></li>
+      <li><span><span class="filter-label">Topic tags</span> — Between 1 and 5 machine-readable tags (e.g. <code>rust</code>, <code>llm</code>, <code>cli-tool</code>) that power the tag-cloud filter on the main page.</span></li>
+    </ul>
+    <p style="margin-top:0.85rem;">Summaries are <strong>cached in the database</strong>. A repository is only re-summarised if it was not already present from a previous run, keeping API costs low and the daily run fast.</p>
+  </section>
+
+  <!-- 4. Update frequency -->
+  <section class="about-section" aria-labelledby="section-schedule">
+    <h2 class="section-heading" id="section-schedule">
+      <span class="icon" aria-hidden="true">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" width="16" height="16" fill="currentColor"><path d="M8 0a8 8 0 1 1 0 16A8 8 0 0 1 8 0ZM1.5 8a6.5 6.5 0 1 0 13 0 6.5 6.5 0 0 0-13 0Zm7-3.25v2.992l2.028.812a.75.75 0 0 1-.557 1.392l-2.5-1A.751.751 0 0 1 7 8.25v-3.5a.75.75 0 0 1 1.5 0Z"/></svg>
+      </span>
+      Update Schedule
+    </h2>
+    <p>The pipeline runs <strong>daily at 8:00 AM</strong> via <strong>Windows Task Scheduler</strong>. Each run executes the following steps in order:</p>
+    <div class="pipeline-steps" role="list">
+      <div class="pipeline-step" role="listitem">
+        <span class="step-num" aria-hidden="true">1</span>
+        <div class="step-body">
+          <div class="step-title">Fetch</div>
+          <div class="step-desc">Query the GitHub Search API and collect up to 200 recently-pushed repositories with ≥ 50 stars.</div>
+        </div>
+      </div>
+      <div class="pipeline-step" role="listitem">
+        <span class="step-num" aria-hidden="true">2</span>
+        <div class="step-body">
+          <div class="step-title">Rank</div>
+          <div class="step-desc">Compute the composite trending score for each repo and sort descending.</div>
+        </div>
+      </div>
+      <div class="pipeline-step" role="listitem">
+        <span class="step-num" aria-hidden="true">3</span>
+        <div class="step-body">
+          <div class="step-title">Summarise</div>
+          <div class="step-desc">Generate AI summaries and topic tags for any new repos not already in the database.</div>
+        </div>
+      </div>
+      <div class="pipeline-step" role="listitem">
+        <span class="step-num" aria-hidden="true">4</span>
+        <div class="step-body">
+          <div class="step-title">Build</div>
+          <div class="step-desc">Regenerate the static <code>docs/index.html</code> site from the latest database snapshot.</div>
+        </div>
+      </div>
+      <div class="pipeline-step" role="listitem">
+        <span class="step-num" aria-hidden="true">5</span>
+        <div class="step-body">
+          <div class="step-title">Deploy</div>
+          <div class="step-desc">Push the updated site to GitHub, which triggers an automatic <strong>Cloudflare Pages</strong> deployment.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 5. Data storage -->
+  <section class="about-section" aria-labelledby="section-storage">
+    <h2 class="section-heading" id="section-storage">
+      <span class="icon" aria-hidden="true">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" width="16" height="16" fill="currentColor"><path d="M1 3.5C1 2.119 4.03 1 8 1s7 1.119 7 2.5v2c0 1.381-3.03 2.5-7 2.5S1 6.881 1 5.5v-2Zm0 4.75C1 9.6 4.03 10.5 8 10.5s7-.9 7-2.25v-1.5c-1.524 1.072-4.186 1.5-7 1.5s-5.476-.428-7-1.5v1.5Zm0 3.25C1 12.85 4.03 14 8 14s7-1.15 7-2.5v-1.5c-1.524 1.072-4.186 1.5-7 1.5s-5.476-.428-7-1.5v1.5Z"/></svg>
+      </span>
+      Data Storage
+    </h2>
+    <p>All results are stored in a <strong>SQLite database</strong> at <code>data/trending.db</code>. The database accumulates every daily snapshot, so historical data is preserved across runs.</p>
+    <p>This enables the pipeline to compute <strong>star-growth deltas</strong> over time (e.g. stars gained in the last 7 days) by diffing successive snapshots — the data behind the "7-day growth" stat shown on each repository card.</p>
+  </section>
+
+  <!-- 6. Filters explained -->
+  <section class="about-section" aria-labelledby="section-filters">
+    <h2 class="section-heading" id="section-filters">
+      <span class="icon" aria-hidden="true">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" width="16" height="16" fill="currentColor"><path d="M0 2.75A.75.75 0 0 1 .75 2h14.5a.75.75 0 0 1 0 1.5H.75A.75.75 0 0 1 0 2.75Zm2 4.25a.75.75 0 0 1 .75-.75h10.5a.75.75 0 0 1 0 1.5H2.75A.75.75 0 0 1 2 7Zm3.75 3.25a.75.75 0 0 1 .75-.75h3.5a.75.75 0 0 1 0 1.5h-3.5a.75.75 0 0 1-.75-.75Z"/></svg>
+      </span>
+      Filters Explained
+    </h2>
+    <p>The main page provides several ways to narrow the list of trending repositories:</p>
+    <ul class="filter-list">
+      <li>
+        <span><span class="filter-label">Search</span> — Full-text match across the repository name, GitHub description, AI-generated summary, and topic tags.</span>
+      </li>
+      <li>
+        <span><span class="filter-label">Language</span> — Filter by GitHub's detected primary programming language for the repository.</span>
+      </li>
+      <li>
+        <span><span class="filter-label">Time period</span> — Restrict results to repos that have shown star growth within a selected window (e.g. last 24 h, 7 days, 30 days).</span>
+      </li>
+      <li>
+        <span><span class="filter-label">Sort</span> — Order by <em>Trending</em> (composite score), <em>Most Stars</em>, or <em>Most Forks</em>.</span>
+      </li>
+      <li>
+        <span><span class="filter-label">Min Stars</span> — Slider to set a minimum total star count threshold, filtering out lower-signal repositories.</span>
+      </li>
+      <li>
+        <span><span class="filter-label">Tag cloud</span> — AI-generated topic tags appear beneath the filter bar. Click one or more tags to filter the list — multiple tags use OR logic, so any matching tag qualifies a repo.</span>
+      </li>
+    </ul>
+  </section>
+
+</main>
+
+<!-- ===== Footer ===== -->
+<footer class="site-footer">
+  <p>
+    Generated by the GitHub Trending Pipeline &mdash;
+    <a href="https://github.com" target="_blank" rel="noopener noreferrer">GitHub</a>
+    &bull; <a href="index.html">Back to trending repos</a>
+  </p>
+</footer>
+
+</body>
+</html>
